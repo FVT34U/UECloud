@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UECloud</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+
+<body>
+    <h1>Тест загрузки, скачивания и удаления файлов</h1>
+
+    <div class="input-row">
+        <form action="/upload" method="post">
+            <input type="text" name="path" placeholder="путь/до/файла" required>
+            <button type="submit">Загрузить</button>
+        </form>
+    </div>
+
+    <div class="input-row">
+        <form action="/download" method="post">
+            <input type="text" name="path" placeholder="путь/до/файла" required>
+            <button type="submit">Скачать</button>
+        </form>
+    </div>
+
+    <div class="input-row">
+        <form action="/delete" method="post">
+            <input type="text" name="path" placeholder="путь/до/файла" required>
+            <button type="submit">Удалить</button>
+        </form>
+    </div>
+
+</body>
+
+</html>

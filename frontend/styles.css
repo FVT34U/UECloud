@@ -1,0 +1,86 @@
+/* styles.css */
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 40px;
+    color: #444;
+}
+
+.container {
+    width: 100%; /* Занимает всю доступную ширину */
+    max-width: 600px; /* Максимальная ширина контейнера */
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Центрируем элементы внутри контейнера */
+    gap: 15px; /* Расстояние между строками */
+    box-sizing: border-box; /* Учитываем padding и border в ширине контейнера */
+}
+
+.input-row {
+    width: 100%; /* Полная ширина строки */
+    display: flex;
+    gap: 10px; /* Расстояние между полем ввода и кнопкой */
+}
+
+.input-row input {
+    flex: 1; /* Поле ввода занимает оставшуюся ширину */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+.input-row button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    width: 120px; /* Ширина кнопки фиксирована */
+}
+
+.input-row button:hover {
+    background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        width: 100%;
+        padding: 10px;
+    }
+
+    .input-row {
+        flex-direction: column; /* Вертикальное выравнивание на маленьких экранах */
+        align-items: stretch; /* Кнопки и поля ввода будут по всей ширине */
+    }
+
+    .input-row button {
+        width: 100%; /* Кнопка будет занимать всю ширину на маленьких экранах */
+    }
+}
