@@ -1,2 +1,6 @@
 aiobotocore
-fastapi
+fastapi[all]
+python-multipart
+pymongo[srv]
+pyjwt
+passlib[bcrypt]
