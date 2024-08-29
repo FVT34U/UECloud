@@ -18,17 +18,26 @@ async def get_index(current_user: Annotated[User, Depends(get_current_active_use
 
 
 @router.post("/upload")
-async def post_upload(path: Annotated[str, Form()]):
+async def post_upload(
+    path: Annotated[str, Form()],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
     await client.upload_file(path)
 
 
 @router.post("/download")
-async def post_download(path: Annotated[str, Form()]):
+async def post_download(
+    path: Annotated[str, Form()],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
     await client.download_file(path)
 
 
 @router.post("/delete")
-async def post_delete(path: Annotated[str, Form()]):
+async def post_delete(
+    path: Annotated[str, Form()],
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
     await client.delete_file(path)
 
 

@@ -6,7 +6,7 @@ from app.utils.exception_handler import http_exception_handler
 from app.utils.s3_connection import S3Client
 from app.routers.main_router import router as MainRouter
 from app.routers.auth_router import router as AuthRouter
-from app.utils.mongodb_connection import client
+from app.utils.mongodb_connection import _client
 
 
 app = FastAPI()

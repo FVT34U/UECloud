@@ -11,25 +11,29 @@
 <body>
     <h1>Тест загрузки, скачивания и удаления файлов</h1>
 
-    <div class="input-row">
-        <form action="/upload" method="post">
-            <input type="text" name="path" placeholder="путь/до/файла" required>
-            <button type="submit">Загрузить</button>
-        </form>
-    </div>
+    <div class="container">
 
-    <div class="input-row">
-        <form action="/download" method="post">
-            <input type="text" name="path" placeholder="путь/до/файла" required>
-            <button type="submit">Скачать</button>
-        </form>
-    </div>
+        <div class="input-row">
+            <form action="/upload" method="post">
+                <input type="text" name="path" placeholder="путь/до/файла" required>
+                <button type="submit">Загрузить</button>
+            </form>
+        </div>
 
-    <div class="input-row">
-        <form action="/delete" method="post">
-            <input type="text" name="path" placeholder="путь/до/файла" required>
-            <button type="submit">Удалить</button>
-        </form>
+        <div class="input-row">
+            <form action="/download" method="post">
+                <input type="text" name="path" placeholder="путь/до/файла" required>
+                <button type="submit">Скачать</button>
+            </form>
+        </div>
+
+        <div class="input-row">
+            <form action="/delete" method="post">
+                <input type="text" name="path" placeholder="путь/до/файла" required>
+                <button type="submit">Удалить</button>
+            </form>
+        </div>
+
     </div>
 
 </body>
