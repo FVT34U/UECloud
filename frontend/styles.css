@@ -22,7 +22,7 @@ h1 {
 
 .container {
     width: 100%; /* Занимает всю доступную ширину */
-    max-width: 600px; /* Максимальная ширина контейнера */
+    max-width: fit-content; /* Максимальная ширина контейнера */
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
@@ -34,10 +34,33 @@ h1 {
     box-sizing: border-box; /* Учитываем padding и border в ширине контейнера */
 }
 
+.input-rows-div {
+    width: 100%; /* Занимает всю ширину страницы */
+    max-width: fit-content;
+
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+    display: flex; /* Используем flexbox для центрирования */
+    flex-direction: column;
+    align-items: center; /* Вертикальное выравнивание */
+
+    justify-content: center; /* Центрируем содержимое по горизонтали */
+
+    gap: 15px;
+    box-sizing: border-box; /* Учитываем padding и border в ширине контейнера */
+
+    margin-bottom: 15px; /* Добавляем отступ снизу для разделения строк */
+}
+
 .input-row {
-    width: 100%; /* Полная ширина строки */
+    width: auto; /* Автоматическая ширина строки, чтобы она занимала только нужное место */
     display: flex;
     gap: 10px; /* Расстояние между полем ввода и кнопкой */
+    justify-content: center; /* Центрирование строки внутри родителя */
+    align-items: center; /* Вертикальное выравнивание элементов */
 }
 
 .input-row input {

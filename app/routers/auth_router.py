@@ -1,6 +1,6 @@
 from datetime import timedelta
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 import uuid
 from fastapi import APIRouter, Depends, Form, HTTPException, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.models.user import authenticate_user, get_user
 from app.utils.mongodb_connection import get_collection_users
 from app.models.token import Token, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
-from app.utils.password_encription import encode_password, get_password_hash
+from app.utils.password_encription import get_password_hash
 
 
 router = APIRouter()
@@ -19,7 +19,7 @@ router = APIRouter()
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     response: Response,
-) -> Token:
+):
     user = authenticate_user(form_data.username, form_data.password)
 
     if not user:
@@ -39,10 +39,12 @@ async def login_for_access_token(
         value=access_token,
         httponly=True,
         secure=False,
-        samesite="lax",
     )
 
-    return Token(access_token=access_token, token_type="bearer")
+    # Realization with PasswordBearer
+    #
+    #return Token(access_token=access_token, token_type="bearer")
+    return RedirectResponse("/", status_code=302)
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -60,8 +62,8 @@ async def get_register():
 async def post_register(
     username: Annotated[str, Form()],
     password: Annotated[str, Form()],
-    email: Annotated[str, Form()],
-    telegram: Annotated[str, Form()],
+    email: Annotated[Optional[str], Form()] = None,
+    telegram: Annotated[Optional[str], Form()] = None,
 ):
     user = get_user(username)
     
