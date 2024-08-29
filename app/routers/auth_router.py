@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.models.user import authenticate_user, get_user
+from app.models.user import User, authenticate_user, get_current_active_user, get_user
 from app.utils.mongodb_connection import get_collection_users
 from app.models.token import Token, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
 from app.utils.password_encription import get_password_hash
@@ -18,7 +18,6 @@ router = APIRouter()
 @router.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    #response: Response,
 ):
     user = authenticate_user(form_data.username, form_data.password)
 
@@ -33,9 +32,6 @@ async def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-
-    #print(f"[LOG]: has response - {True if response else False}")
-    #print(f"[LOG]: access_token : {access_token}")
 
     response = RedirectResponse("/", status_code=302)
 
@@ -87,3 +83,13 @@ async def post_register(
     })
 
     return RedirectResponse("/login", status_code=302)
+
+
+@router.get("/logout")
+async def get_logout(
+    current_user: Annotated[User, Depends(get_current_active_user)]
+):
+    response = RedirectResponse("/login", status_code=302)
+    response.delete_cookie(key="access_token")
+
+    return response

@@ -43,6 +43,11 @@ header {
 .header-container h1 {
     font-size: 1.8em;
     margin: 0;
+    padding: 5px 15px;
+    border: 2px solid white; /* Белая рамка вокруг текста */
+    border-radius: 5px; /* Скругление углов рамки */
+    color: white;
+    background-color: transparent;
 }
 
 .header-container form {
