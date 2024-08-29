@@ -19,7 +19,7 @@ class S3Client:
     ) -> None:
         self.config = {
             "aws_access_key_id": access_key,
-            "aws_secret_key_id": secret_key,
+            "aws_secret_access_key": secret_key,
             "endpoint_url": endpoint_url,
         }
         self.bucket_name = bucket_name
@@ -30,14 +30,15 @@ class S3Client:
         async with self.session.create_client("s3", **self.config) as client:
             yield client
 
-    async def upload_file(self,
-                          file_path: str,
+    async def upload_file(
+            self,
+            file_path: str,
     ) -> None:
         async with self.get_client() as client:
             with open(file_path, "rb") as file:
                 await client.put_object(
                     Bucket=self.bucket_name,
-                    Key=file_path,
+                    Key=f"test/{file_path.split("\\")[-1]}",
                     Body=file,
                 )
 

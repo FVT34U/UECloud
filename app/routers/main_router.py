@@ -8,7 +8,12 @@ from app.utils.s3_connection import S3Client
 
 
 router = APIRouter()
-client = S3Client("xxx", "xxx", "xxx", "xxx")
+s3_client = S3Client(
+    "L201GGN3PARM2UOEH46F",
+    "Qk1rldX0xI3nPgncA8awr7DYAIjqA1jezkYf2rIo",
+    "http://91.222.131.165:8080",
+    "uecloud",
+)
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -22,7 +27,7 @@ async def post_upload(
     path: Annotated[str, Form()],
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    await client.upload_file(path)
+    await s3_client.upload_file(path)
 
 
 @router.post("/download")
@@ -30,7 +35,7 @@ async def post_download(
     path: Annotated[str, Form()],
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    await client.download_file(path)
+    await s3_client.download_file(path)
 
 
 @router.post("/delete")
@@ -38,7 +43,7 @@ async def post_delete(
     path: Annotated[str, Form()],
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    await client.delete_file(path)
+    await s3_client.delete_file(path)
 
 
 @router.get("/users/me/", response_model=User)
