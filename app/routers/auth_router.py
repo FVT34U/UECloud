@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.models.user import User, authenticate_user, get_current_active_user, get_user
+from app.models.user import User, authenticate_user, get_current_active_user, get_db_user
 from app.utils.mongodb_connection import get_collection_users
 from app.models.token import Token, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
 from app.utils.password_encription import get_password_hash
@@ -67,7 +67,7 @@ async def post_register(
     email: Annotated[Optional[str], Form()] = None,
     telegram: Annotated[Optional[str], Form()] = None,
 ):
-    user = get_user(username)
+    user = get_db_user(username)
     
     if user:
         return RedirectResponse("/register", status_code=302)

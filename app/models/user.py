@@ -24,7 +24,7 @@ class UserInDB(User):
     hashed_password: str
 
 
-def get_user(username: str):
+def get_db_user(username: str):
     coll = get_collection_users()
     query = {"username": username}
 
@@ -35,7 +35,7 @@ def get_user(username: str):
     
 
 def authenticate_user(username: str, password: str):
-    user = get_user(username)
+    user = get_db_user(username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -98,7 +98,7 @@ async def get_current_user(access_token: str = Cookie(None)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user = get_user(username=token_data.username)
+    user = get_db_user(username=token_data.username)
 
     if user is None:
         print("[LOG]: ON GET CURRENT USER: user is None")
