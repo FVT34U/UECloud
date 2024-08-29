@@ -20,6 +20,51 @@ h1 {
     color: #444;
 }
 
+header {
+    background-color: #007BFF;
+    padding: 10px 20px;
+    color: white;
+    top: 0px;
+    left: 0;
+    width: -webkit-fill-available;
+    position: fixed;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between; /* Распределяет элементы на разные стороны */
+    align-items: center; /* Вертикальное выравнивание элементов по центру */
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.header-container h1 {
+    font-size: 1.8em;
+    margin: 0;
+}
+
+.header-container form {
+    margin: 0;
+}
+
+.header-container button {
+    padding: 10px 20px;
+    background-color: #fff;
+    color: #007BFF;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+    font-size: 1em;
+}
+
+.header-container button:hover {
+    background-color: #e7e7e7;
+    color: #0056b3;
+}
+
 .container {
     width: 100%; /* Занимает всю доступную ширину */
     max-width: fit-content; /* Максимальная ширина контейнера */
@@ -84,6 +129,17 @@ h1 {
 
 .input-row button:hover {
     background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column; /* Вертикальное выравнивание на экранах средней ширины */
+        align-items: flex-start;
+    }
+
+    .header-container h1 {
+        margin-bottom: 10px;
+    }
 }
 
 @media (max-width: 768px) {

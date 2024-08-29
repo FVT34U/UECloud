@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    response: Response,
+    #response: Response,
 ):
     user = authenticate_user(form_data.username, form_data.password)
 
@@ -34,6 +34,11 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
 
+    #print(f"[LOG]: has response - {True if response else False}")
+    #print(f"[LOG]: access_token : {access_token}")
+
+    response = RedirectResponse("/", status_code=302)
+
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -44,7 +49,7 @@ async def login_for_access_token(
     # Realization with PasswordBearer
     #
     #return Token(access_token=access_token, token_type="bearer")
-    return RedirectResponse("/", status_code=302)
+    return response
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -57,6 +62,7 @@ async def get_login():
 async def get_register():
     index_path = Path("frontend/register.html")
     return index_path.read_text(encoding="utf-8")
+
 
 @router.post("/register", response_class=RedirectResponse)
 async def post_register(
