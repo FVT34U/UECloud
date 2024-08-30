@@ -64,8 +64,8 @@ class S3Client:
             )
 
             async with response['Body'] as stream:
-                with open(local_file_path, 'wb') as file:
-                    file.write(await stream.read())
+                async with aiofiles.open(local_file_path, 'wb') as file:
+                    await file.write(await stream.read())
             
     
     async def delete_file(
