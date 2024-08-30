@@ -1,11 +1,12 @@
 from pathlib import Path
 from typing import Annotated
 import aiofiles
-from fastapi import APIRouter, Depends, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, Form
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
 from app.models.user import User, get_current_active_user
 from app.utils.s3_connection import S3Client
+from app.utils.extension_mapping import MEDIA_TYPES
 
 
 router = APIRouter()
@@ -35,8 +36,18 @@ async def post_upload(
 async def post_download(
     path: Annotated[str, Form()],
     current_user: Annotated[User, Depends(get_current_active_user)],
+    back: BackgroundTasks,
 ):
-    await s3_client.download_file(path)
+    local_file_path = await s3_client.download_file(path)
+
+    if not local_file_path:
+        return
+    
+    extension = local_file_path.split("/")[-1].split(".")[-1]
+
+    back.add_task(s3_client.cleanup, local_file_path)
+    
+    return FileResponse(local_file_path, media_type=MEDIA_TYPES.get(extension), background=back)
 
 
 @router.post("/delete")
