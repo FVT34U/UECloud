@@ -1,5 +1,7 @@
 from contextlib import asynccontextmanager
+import os
 from aiobotocore.session import get_session
+import aiofiles
 
 class S3Client:
 
@@ -46,13 +48,25 @@ class S3Client:
             self,
             file_path: str,
     ):
+        folder_path = "storage"
+        file_name = file_path.split("/")[-1]
+
+        # Создание папки, если она не существует
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        local_file_path = os.path.join(folder_path, file_name)
+
         async with self.get_client() as client:
             response = await client.get_object(
                 Bucket=self.bucket_name,
                 Key=file_path,
             )
+
+            async with response['Body'] as stream:
+                with open(local_file_path, 'wb') as file:
+                    file.write(await stream.read())
             
-        return response["Body"]
     
     async def delete_file(
             self,

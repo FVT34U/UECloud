@@ -4,3 +4,4 @@ python-multipart
 pymongo[srv]
 pyjwt
 passlib[bcrypt]
+aiofiles
