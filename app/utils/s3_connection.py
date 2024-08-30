@@ -47,25 +47,29 @@ class S3Client:
     async def download_file(
             self,
             file_path: str,
-    ):
+    ) -> str | None:
         folder_path = "storage"
         file_name = file_path.split("/")[-1]
 
-        # Создание папки, если она не существует
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
         local_file_path = os.path.join(folder_path, file_name)
 
-        async with self.get_client() as client:
-            response = await client.get_object(
-                Bucket=self.bucket_name,
-                Key=file_path,
-            )
+        try:
+            async with self.get_client() as client:
+                response = await client.get_object(
+                    Bucket=self.bucket_name,
+                    Key=file_path,
+                )
 
-            async with response['Body'] as stream:
-                async with aiofiles.open(local_file_path, 'wb') as file:
-                    await file.write(await stream.read())
+                async with response['Body'] as stream:
+                    async with aiofiles.open(local_file_path, 'wb') as file:
+                        await file.write(await stream.read())
+        except:
+            return None
+        
+        return local_file_path
             
     
     async def delete_file(
@@ -77,3 +81,7 @@ class S3Client:
                 Bucket=self.bucket_name,
                 Key=file_path,
             )
+
+
+    def cleanup(self, file_path: str):
+        os.remove(file_path)
