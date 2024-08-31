@@ -10,7 +10,7 @@ from app.utils.mongodb_connection import _client
 
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="frontend"), name="static")
+app.mount("/api/static", StaticFiles(directory="frontend"), name="static")
 
 app.include_router(MainRouter)
 app.include_router(AuthRouter)

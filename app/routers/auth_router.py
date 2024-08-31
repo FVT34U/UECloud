@@ -5,8 +5,10 @@ import uuid
 from fastapi import APIRouter, Depends, Form, HTTPException, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from fastui import FastUI
+from fastui import AnyComponent, FastUI, components as c, prebuilt_html
 
-from app.models.user import User, authenticate_user, get_current_active_user, get_db_user
+from app.models.user import User, UserSignIn, authenticate_user, get_current_active_user, get_db_user
 from app.utils.mongodb_connection import get_collection_users
 from app.models.token import Token, ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
 from app.utils.password_encription import get_password_hash
@@ -15,7 +17,7 @@ from app.utils.password_encription import get_password_hash
 router = APIRouter()
 
 
-@router.post("/token")
+@router.post("/api/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ):
@@ -33,7 +35,7 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
 
-    response = RedirectResponse("/", status_code=302)
+    response = RedirectResponse("/api", status_code=302)
 
     response.set_cookie(
         key="access_token",
@@ -48,13 +50,25 @@ async def login_for_access_token(
     return response
 
 
-@router.get("/login", response_class=HTMLResponse)
+@router.get("/api/login", response_class=FastUI, response_model_exclude_none=True)
 async def get_login():
-    index_path = Path("frontend/login.html")
-    return index_path.read_text(encoding="utf-8")
+    #index_path = Path("frontend/login.html")
+    #return index_path.read_text(encoding="utf-8")
+
+    return [
+        c.Page(
+            components=[
+                c.Heading(text='Sign In', level='1'),
+                c.ModelForm(
+                    model=UserSignIn,
+                    submit_url="/api/login",
+                )
+            ]
+        )
+    ]
 
 
-@router.get("/register", response_class=HTMLResponse)
+@router.get("/api/register", response_class=HTMLResponse)
 async def get_register():
     index_path = Path("frontend/register.html")
     return index_path.read_text(encoding="utf-8")
@@ -70,7 +84,7 @@ async def post_register(
     user = get_db_user(username)
     
     if user:
-        return RedirectResponse("/register", status_code=302)
+        return RedirectResponse("/api/register", status_code=302)
 
     coll = get_collection_users()
     coll.insert_one({
@@ -82,14 +96,14 @@ async def post_register(
         "disabled": False,
     })
 
-    return RedirectResponse("/login", status_code=302)
+    return RedirectResponse("/api/login", status_code=302)
 
 
-@router.get("/logout")
+@router.get("/api/logout")
 async def get_logout(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
-    response = RedirectResponse("/login", status_code=302)
+    response = RedirectResponse("/api/login", status_code=302)
     response.delete_cookie(key="access_token")
 
     return response

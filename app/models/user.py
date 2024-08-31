@@ -24,6 +24,11 @@ class UserInDB(User):
     hashed_password: str
 
 
+class UserSignIn(BaseModel):
+    username: str
+    password: str
+
+
 def get_db_user(username: str):
     coll = get_collection_users()
     query = {"username": username}

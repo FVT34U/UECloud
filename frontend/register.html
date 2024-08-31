@@ -5,13 +5,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>UECloud-SignUp</title>
-    <link rel="stylesheet" href="/static/register.css">
+    <link rel="stylesheet" href="/api/static/register.css">
 </head>
 
 <body>
     <div class="register-container">
         <h1>Sign Up right here!</h1>
-        <form action="/register" method="post">
+        <form action="/api/register" method="post">
             <div class="input-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" placeholder="XXX_DEATH_ANGEL_XXX" required>
@@ -31,7 +31,7 @@
             <button type="submit">Sign Up</button>
         </form>
         <div class="sign-in-container">
-            <a href="/login" class="sign-in-ref">Already have an account? Sign In here!</p>
+            <a href="/api/login" class="sign-in-ref">Already have an account? Sign In here!</p>
         </div>
     </div>
 </body>

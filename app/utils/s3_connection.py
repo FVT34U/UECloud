@@ -38,9 +38,10 @@ class S3Client:
     ) -> None:
         async with self.get_client() as client:
             with open(file_path, "rb") as file:
+                k = file_path.split('\\')[-1] # no need in python3.12 for some reason
                 await client.put_object(
                     Bucket=self.bucket_name,
-                    Key=f"test/{file_path.split("\\")[-1]}",
+                    Key=f"test/{k}",
                     Body=file,
                 )
 

@@ -3,6 +3,7 @@ from typing import Annotated
 import aiofiles
 from fastapi import APIRouter, BackgroundTasks, Depends, Form
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastui import AnyComponent, FastUI, components as c, prebuilt_html
 
 from app.models.user import User, get_current_active_user
 from app.utils.s3_connection import S3Client
@@ -18,13 +19,23 @@ s3_client = S3Client(
 )
 
 
-@router.get("/", response_class=HTMLResponse)
-async def get_index(current_user: Annotated[User, Depends(get_current_active_user)]):
-    index_path = Path("frontend/index.html")
-    return index_path.read_text(encoding="utf-8")
+@router.get("/api/", response_class=FastUI, response_model_exclude_none=True)
+async def get_index(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+) -> list[AnyComponent]:
+    #index_path = Path("frontend/index.html")
+    #return index_path.read_text(encoding="utf-8")
+
+    return [
+        c.Page(
+            components=[
+                c.Heading(text='Home', level='1'),
+            ]
+        )
+    ]
 
 
-@router.post("/upload")
+@router.post("/upload/")
 async def post_upload(
     path: Annotated[str, Form()],
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -32,7 +43,7 @@ async def post_upload(
     await s3_client.upload_file(path)
 
 
-@router.post("/download")
+@router.post("/download/")
 async def post_download(
     path: Annotated[str, Form()],
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -50,7 +61,7 @@ async def post_download(
     return FileResponse(local_file_path, media_type=MEDIA_TYPES.get(extension), background=back)
 
 
-@router.post("/delete")
+@router.post("/delete/")
 async def post_delete(
     path: Annotated[str, Form()],
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -58,8 +69,27 @@ async def post_delete(
     await s3_client.delete_file(path)
 
 
-@router.get("/users/me/", response_model=User)
-async def read_users_me(
+# @router.get("/users/me/", response_model=User)
+# async def read_users_me(
+#     current_user: Annotated[User, Depends(get_current_active_user)],
+# ):
+#     return current_user
+
+@router.get("/api/users/me/", response_class=FastUI, response_model_exclude_none=True)
+def get_profile(
     current_user: Annotated[User, Depends(get_current_active_user)],
-):
-    return current_user
+) -> list[AnyComponent]:
+    return [
+        c.Page(
+            components=[
+                c.Heading(text=current_user.username, level=2),
+                c.Paragraph(text=f'email: {current_user.email}'),
+                c.Paragraph(text=f'telegram: {current_user.telegram}'),
+            ],
+        ),
+    ]
+
+@router.get('/{path:path}')
+async def html_landing() -> HTMLResponse:
+    """Simple HTML page which serves the React app, comes last as it matches all paths."""
+    return HTMLResponse(prebuilt_html(title='UECloud'))

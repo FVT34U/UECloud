@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>UECloud</title>
-  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/api/static/styles.css">
 </head>
 
 <body>
@@ -13,10 +13,10 @@
     <header>
         <div class="header-container">
             <h1>UECloud</h1>
-            <form action="/users/me" method="get">
+            <form action="/api/users/me" method="get">
                 <button type="submit">Profile</button>
             </form>
-            <form action="/logout" method="get">
+            <form action="/api/logout" method="get">
                 <button type="submit">Log Out</button>
             </form>
         </div>
@@ -27,21 +27,21 @@
     <div class="container">
 
         <div class="input-row">
-            <form action="/upload" method="post">
+            <form action="/api/upload" method="post">
                 <input type="text" name="path" placeholder="путь/до/файла" required>
                 <button type="submit">Загрузить</button>
             </form>
         </div>
 
         <div class="input-row">
-            <form action="/download" method="post">
+            <form action="/api/download" method="post">
                 <input type="text" name="path" placeholder="путь/до/файла" required>
                 <button type="submit">Скачать</button>
             </form>
         </div>
 
         <div class="input-row">
-            <form action="/delete" method="post">
+            <form action="/api/delete" method="post">
                 <input type="text" name="path" placeholder="путь/до/файла" required>
                 <button type="submit">Удалить</button>
             </form>
