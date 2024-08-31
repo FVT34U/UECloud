@@ -5,3 +5,4 @@ pymongo[srv]
 pyjwt
 passlib[bcrypt]
 aiofiles
+fastui
