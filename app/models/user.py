@@ -84,3 +84,28 @@ async def get_current_active_user(
     if current_user.disabled:
         raise credentials_exception
     return current_user
+
+
+async def user_has_access_to_workspace(
+    workspace_name: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    user_coll = get_collection_users()
+    user = user_coll.find_one(
+        {
+            "username": current_user.username,
+            "available_storages": {
+                "$elemMatch": {
+                    "entity_name": workspace_name,
+                }
+            }
+        }
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You don't have permission to see this workspace",
+        )
+    
+    return current_user

@@ -1,13 +1,12 @@
 from pathlib import Path
-from typing import Annotated, List
+from typing import Annotated
 import uuid
-import aiofiles
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, status
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
-from app.models.storage_entity import StorageEntity, StorageEntityDescription, StorageEntityList
+from app.models.storage_entity import StorageEntity, StorageEntityList
 from app.models.storage_group import StorageEntityGroupList
-from app.models.user import User, get_current_active_user
+from app.models.user import User, get_current_active_user, user_has_access_to_workspace
 from app.utils.mongodb_connection import get_collection_users, get_collection_workspaces
 from app.utils.s3_connection import S3Client
 from app.utils.extension_mapping import MEDIA_TYPES
@@ -102,14 +101,15 @@ async def get_workspaces(
 
     return workspaces
 
-@router.get("/workspaces/{workspace_name}", response_model=StorageEntity)
-async def get_workspace_by_id(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+@router.get("/workspaces/{workspace_name}/", response_model=StorageEntity)
+async def get_workspace_by_name(
+    current_user: Annotated[User, Depends(get_current_active_user), Depends(user_has_access_to_workspace)],
+    #current_user: Annotated[User, Depends(get_current_active_user)],
     workspace_name: str,
 ):
-    coll = get_collection_workspaces()
+    w_coll = get_collection_workspaces()
 
-    ws = coll.find_one({"name":workspace_name})
+    ws = w_coll.find_one({"name":workspace_name})
     if not ws:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
