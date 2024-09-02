@@ -5,7 +5,7 @@ import aiofiles
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, status
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
-from app.models.storage_entity import StorageEntity, StorageEntityList
+from app.models.storage_entity import StorageEntity, StorageEntityDescription, StorageEntityList
 from app.models.storage_group import StorageEntityGroupList
 from app.models.user import User, get_current_active_user
 from app.utils.mongodb_connection import get_collection_users, get_collection_workspaces
@@ -134,7 +134,6 @@ async def post_create_workspace(
         )
     
     coll = get_collection_workspaces()
-
     test = coll.find_one({"name":workspace_name})
     if test:
         return JSONResponse(
@@ -155,7 +154,6 @@ async def post_create_workspace(
     )
 
     ws = coll.find_one({"_id":id})
-
     if not ws:
         return JSONResponse(
             {
@@ -163,6 +161,22 @@ async def post_create_workspace(
                 "detail": "Database error, workspace hasn't been added",
             }
         )
+    
+    user_coll = get_collection_users()
+    
+    user_coll.update_one(
+        filter={
+            "username": current_user.username,
+        },
+        update={
+            '$push': {
+                "available_storages": {
+                    "entity_name": workspace_name,
+                    "group_name": "owner",
+                }
+            }
+        }
+    )
     
     await s3_client.create_dir(workspace_name)
 

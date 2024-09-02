@@ -73,14 +73,17 @@ async def post_register(
         return RedirectResponse("/register", status_code=302)
 
     coll = get_collection_users()
-    coll.insert_one({
-        "_id": str(uuid.uuid4()),
-        "username": username,
-        "hashed_password": get_password_hash(password),
-        "email": email,
-        "telegram": telegram,
-        "disabled": False,
-    })
+    coll.insert_one(
+        {
+            "_id": str(uuid.uuid4()),
+            "username": username,
+            "hashed_password": get_password_hash(password),
+            "email": email,
+            "telegram": telegram,
+            "disabled": False,
+            "available_storages": [],
+        }
+    )
 
     return RedirectResponse("/login", status_code=302)
 
