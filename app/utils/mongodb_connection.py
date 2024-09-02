@@ -12,3 +12,6 @@ def get_db():
 
 def get_collection_users():
     return get_db().users
+
+def get_collection_workspaces():
+    return get_db().workspaces

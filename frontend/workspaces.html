@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Workspaces</title>
+    <link rel="stylesheet" href="/static/workspaces.css">
+</head>
+
+<body>
+    <header>
+        <div class="header-container">
+            <h1>UECloud</h1>
+            <div class="button-group">
+                <form action="/profile" method="get">
+                    <button type="submit">Профиль</button>
+                </form>
+                <form action="/logout" method="post">
+                    <button type="submit">Log Out</button>
+                </form>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="main-container">
+            <div class="title-row">
+                <h2>Workspaces</h2>
+                <button id="openModalBtn">Add</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Табличные данные будут добавлены позже -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModalBtn">&times;</span>
+            <h3>Create Workspace</h3>
+            <form action="/workspaces/create" method="post">
+                <div class="input-row">
+                    <label for="name">Name:</label>
+                    <input type="text" id="workspace_name" name="workspace_name" required>
+                </div>
+                <div class="button-row">
+                    <button type="submit">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Скрипт для открытия и закрытия модального окна
+        const modal = document.getElementById('modal');
+        const openModalBtn = document.getElementById('openModalBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        openModalBtn.onclick = function() {
+            modal.style.display = 'block';
+        }
+
+        closeModalBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+
+</body>
+
+</html>

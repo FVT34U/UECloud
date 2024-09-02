@@ -7,7 +7,16 @@ async def http_exception_handler(
     exc: HTTPException,
 ):
     if exc.status_code == status.HTTP_401_UNAUTHORIZED:
-        #print(f"[LOG]: Got 401 status: {exc.detail}")
-        #return RedirectResponse("/login", status_code=302)
-        return JSONResponse({"status": "HTTP_401_UNAUTHORIZED",
-                             "detail": exc.detail})
+        return JSONResponse(
+            {
+                "status": "HTTP_401_UNAUTHORIZED",
+                "detail": exc.detail,
+            }
+        )
+    elif exc.status_code == status.HTTP_404_NOT_FOUND:
+        return JSONResponse(
+            {
+                "status": "HTTP_404_NOT_FOUND",
+                "detail": exc.detail,
+            }
+        )

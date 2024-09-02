@@ -82,6 +82,18 @@ class S3Client:
                 Key=file_path,
             )
 
+    
+    async def create_dir(
+        self,
+        path: str,
+    ) -> None:
+        async with self.get_client() as client:
+            await client.put_object(
+                Bucket=self.bucket_name,
+                Key=f"{path}/stashkeep.stashkeep",
+                Body=b'',
+            )
+
 
     def cleanup(self, file_path: str):
         os.remove(file_path)

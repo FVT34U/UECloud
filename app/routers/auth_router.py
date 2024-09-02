@@ -62,10 +62,10 @@ async def get_register():
 
 @router.post("/register", response_class=RedirectResponse)
 async def post_register(
-    username: Annotated[str, Form()],
-    password: Annotated[str, Form()],
-    email: Annotated[Optional[str], Form()] = None,
-    telegram: Annotated[Optional[str], Form()] = None,
+    username: Annotated[str, Form(...)],
+    password: Annotated[str, Form(...)],
+    email: Annotated[Optional[str], Form(...)] = None,
+    telegram: Annotated[Optional[str], Form(...)] = None,
 ):
     user = get_db_user(username)
     
