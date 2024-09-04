@@ -9,7 +9,6 @@ from app.utils.password_encription import verify_password
 
 
 class User(BaseModel):
-    _id: str
     username: str
     email: str | None = None
     telegram: str | None = None
@@ -17,6 +16,7 @@ class User(BaseModel):
 
 
 class UserInDB(User):
+    _id: str
     hashed_password: str
 
 
@@ -26,8 +26,13 @@ def get_db_user(username: str):
 
     user = coll.find_one(query)
 
-    if user:
-        return UserInDB(**user)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User doesn't exists"
+        )
+    
+    return UserInDB(**user)
     
 
 def authenticate_user(username: str, password: str):
@@ -61,7 +66,7 @@ async def get_current_user(access_token: str = Cookie(None)):
             detail="jwt.InvalidTokenError",
         )
     
-    user = get_db_user(username=token_data.username)
+    user = User(**get_db_user(username=token_data.username).model_dump())
 
     if user is None:
         raise HTTPException(
@@ -84,6 +89,21 @@ async def get_current_active_user(
     return current_user
 
 
+async def user_exists(
+    username: str,
+) -> User:
+    coll = get_collection_users()
+    user = coll.find_one({"username": username})
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User doesn't exists"
+        )
+    
+    return User(**user)
+
+
 async def user_has_access_to_workspace(
     workspace_name: str,
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -97,7 +117,7 @@ async def user_has_access_to_workspace(
 
     if current_user not in users:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="You don't have permission to see this workspace",
         )
     
