@@ -1,12 +1,12 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, List
 import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, status
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
-from app.models.storage_entity import StorageEntity, StorageEntityList
-from app.models.storage_group import StorageEntityGroupList
-from app.models.user import User, get_current_active_user, user_has_access_to_workspace
+from app.models.storage_entity import StorageEntity, StorageEntityInDB, StorageEntityList, StorageEntityUser
+from app.models.storage_group import StorageEntityGroup, StorageEntityGroupList
+from app.models.user import User, get_current_active_user, get_db_user, user_has_access_to_project, user_has_access_to_workspace
 from app.utils.mongodb_connection import get_collection_users, get_collection_workspaces
 from app.utils.s3_connection import S3Client
 from app.utils.extension_mapping import MEDIA_TYPES
@@ -73,9 +73,7 @@ async def get_user_by_name(
     current_user: Annotated[User, Depends(get_current_active_user)],
     username: str,
 ):
-    coll = get_collection_users()
-
-    user = coll.find_one({"username": username})
+    user = get_db_user(username)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -91,34 +89,21 @@ async def get_user_by_name(
 async def get_workspaces(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    coll = get_collection_workspaces()
-    ws = coll.find({"owner":current_user.username})
+    ws_coll = get_collection_workspaces()
+    wss = ws_coll.find(
+        {
+            "users": {
+                "$elemMatch": {
+                    "user": current_user.username,
+                },
+            },
+        }
+    )
 
-    workspaces = StorageEntityList()
-
-    for w in ws:
-        workspaces.entity_list.append(StorageEntity(**w))
+    workspaces = StorageEntityList(entity_list=[StorageEntity(**ws) for ws in wss])
 
     return workspaces
 
-@router.get("/workspaces/{workspace_name}/", response_model=StorageEntity)
-async def get_workspace_by_name(
-    current_user: Annotated[User, Depends(get_current_active_user), Depends(user_has_access_to_workspace)],
-    #current_user: Annotated[User, Depends(get_current_active_user)],
-    workspace_name: str,
-):
-    w_coll = get_collection_workspaces()
-
-    ws = w_coll.find_one({"name":workspace_name})
-    if not ws:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="This workspace does not exests",
-        )
-    
-    return StorageEntity(
-        **ws,
-    )
 
 @router.post("/workspaces/create", response_class=JSONResponse)
 async def post_create_workspace(
@@ -134,7 +119,7 @@ async def post_create_workspace(
         )
     
     coll = get_collection_workspaces()
-    test = coll.find_one({"name":workspace_name})
+    test = coll.find_one({"name": workspace_name})
     if test:
         return JSONResponse(
             {
@@ -144,16 +129,26 @@ async def post_create_workspace(
         )
 
     id = str(uuid.uuid4())
-    coll.insert_one(
-        StorageEntity(
-            _id=id,
-            name=workspace_name,
-            owner=current_user.username,
-            groups=StorageEntityGroupList(),
-        ).model_dump(by_alias=True)
+    group_list = StorageEntityGroupList()
+    se_user = StorageEntityUser(
+        user=current_user,
+        group=group_list[1],
+    )
+    workspace = StorageEntityInDB(
+        _id = id,
+        name = workspace_name,
+        type="workspace",
+        owner = current_user.username,
+        groups = StorageEntityGroupList(),
+        inner_entities=list(),
+        users=[se_user],
     )
 
-    ws = coll.find_one({"_id":id})
+    coll.insert_one(
+        workspace.model_dump(by_alias=True)
+    )
+
+    ws = coll.find_one({"_id": id})
     if not ws:
         return JSONResponse(
             {
@@ -161,22 +156,6 @@ async def post_create_workspace(
                 "detail": "Database error, workspace hasn't been added",
             }
         )
-    
-    user_coll = get_collection_users()
-    
-    user_coll.update_one(
-        filter={
-            "username": current_user.username,
-        },
-        update={
-            '$push': {
-                "available_storages": {
-                    "entity_name": workspace_name,
-                    "group_name": "owner",
-                }
-            }
-        }
-    )
     
     await s3_client.create_dir(workspace_name)
 
@@ -186,3 +165,57 @@ async def post_create_workspace(
             "detail": "Successful create workspace",
         }
     )
+
+
+@router.get("/workspaces/{workspace_name}/", response_model=StorageEntity)
+async def get_workspace_by_name(
+    current_user: Annotated[User, Depends(get_current_active_user), Depends(user_has_access_to_workspace)],
+    workspace_name: str,
+):
+    w_coll = get_collection_workspaces()
+
+    ws = w_coll.find_one({"name": workspace_name})
+    if not ws:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This workspace does not exests",
+        )
+    
+    return StorageEntity(
+        **ws,
+    )
+
+
+@router.get("/workspaces/{workspace_name}/projects", response_model=StorageEntityList)
+async def get_projects_by_workspace(
+    current_user: Annotated[User, Depends(get_current_active_user), Depends(user_has_access_to_workspace)],
+    workspace_name: str,
+):
+    pass
+
+
+
+@router.get("/workspaces/{workspace_name}/projects/{project_name}", response_model=StorageEntity)
+async def get_projects_by_workspace(
+    current_user: Annotated[
+        User,
+        Depends(get_current_active_user),
+        Depends(user_has_access_to_workspace),
+        Depends(user_has_access_to_project),
+    ],
+    workspace_name: str,
+    project_name: str,
+):
+    pass
+
+
+@router.post("/workspaces/{workspace_name}/projects/create", response_class=JSONResponse)
+async def post_create_project(
+    current_user: Annotated[
+        User,
+        Depends(get_current_active_user),
+        Depends(user_has_access_to_workspace),
+    ],
+    project_name: Annotated[str, Form(...)]
+):
+    pass

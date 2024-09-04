@@ -1,11 +1,10 @@
-from typing import Annotated, List
+from typing import Annotated
 from fastapi import Cookie, Depends, HTTPException, status
 import jwt
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from app.models.storage_entity import StorageEntityDescription
 from app.models.token import TokenData, SECRET_KEY, ALGORITHM
-from app.utils.mongodb_connection import get_collection_users
+from app.utils.mongodb_connection import get_collection_users, get_collection_workspaces
 from app.utils.password_encription import verify_password
 
 
@@ -19,7 +18,6 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str
-    available_storages: Annotated[List[StorageEntityDescription], Field(default_factory=list)]
 
 
 def get_db_user(username: str):
@@ -90,22 +88,25 @@ async def user_has_access_to_workspace(
     workspace_name: str,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    user_coll = get_collection_users()
-    user = user_coll.find_one(
-        {
-            "username": current_user.username,
-            "available_storages": {
-                "$elemMatch": {
-                    "entity_name": workspace_name,
-                }
-            }
-        }
-    )
+    ws_coll = get_collection_workspaces()
 
-    if not user:
+    from app.models.storage_entity import StorageEntityInDB
+    ws_in_db = StorageEntityInDB(**ws_coll.find_one({"name": workspace_name}))
+
+    users = [ws_user.user for ws_user in ws_in_db.users]
+
+    if current_user not in users:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="You don't have permission to see this workspace",
         )
     
+    return current_user
+
+
+async def user_has_access_to_project(
+    workspace_name: str,
+    project_name: str,
+    current_user: Annotated[User, Depends(get_current_active_user), Depends(user_has_access_to_workspace)],
+):
     return current_user

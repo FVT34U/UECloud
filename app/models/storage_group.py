@@ -67,39 +67,46 @@ class StorageEntityGroup(BaseModel):
 
 
 class StorageEntityGroupList(List[StorageEntityGroup]):
-    perms = GroupPermissionDict()
-    perms["read"] = True
+    observer_perms = GroupPermissionDict()
+    observer_perms["read"] = True
+    owner_perms = GroupPermissionDict()
+    owner_perms = dict.fromkeys(owner_perms, True)
+
     _observer_group = StorageEntityGroup(
         name="observer",
-        permissions=perms,
+        permissions=observer_perms,
+    )
+    _owner_group = StorageEntityGroup(
+        name="owner",
+        permissions=owner_perms,
     )
 
     def __init__(self):
-        super().__init__([self._observer_group])
+        super().__init__([self._observer_group, self._owner_group])
 
     def append(self, item):
         if not isinstance(item, StorageEntityGroup):
-            raise TypeError("All elements must be strings")
+            raise TypeError("All elements must be StorageEntityGroup")
         super().append(item)
     
     def insert(self, index, item):
         if not isinstance(item, StorageEntityGroup):
-            raise TypeError("All elements must be strings")
+            raise TypeError("All elements must be StorageEntityGroup")
         super().insert(index, item)
     
     def extend(self, iterable):
         if not all(isinstance(item, StorageEntityGroup) for item in iterable):
-            raise TypeError("All elements must be strings")
+            raise TypeError("All elements must be StorageEntityGroup")
         super().extend(iterable)
     
     def remove(self, item):
-        if item == self._observer_group:
-            raise ValueError(f"Cannot remove the persistent element '{self._observer_group}'")
+        if item == self._observer_group or item == self._owner_group:
+            raise ValueError(f"Cannot remove the persistent element '{self._observer_group}', '{self._owner_group}'")
         super().remove(item)
     
     def pop(self, index=-1):
-        if self[index] == self._observer_group:
-            raise ValueError(f"Cannot remove the persistent element '{self._observer_group}'")
+        if self[index] == self._observer_group or self[index] == self._owner_group:
+            raise ValueError(f"Cannot remove the persistent element '{self._observer_group}', '{self._owner_group}'")
         return super().pop(index)
     
     def __repr__(self):

@@ -2,19 +2,26 @@ from typing import Annotated, List
 from pydantic import BaseModel, BeforeValidator, Field
 
 from app.models.storage_group import StorageEntityGroup, StorageEntityGroupList
+from app.models.user import User
 
 
 class StorageEntity(BaseModel):
     id: str = Field(alias="_id")
     name: str
+    type: str
     owner: str
+
+
+class StorageEntityUser(BaseModel):
+    user: User
+    group: StorageEntityGroup
+
+
+class StorageEntityInDB(StorageEntity):
     groups: Annotated[List[StorageEntityGroup], BeforeValidator(StorageEntityGroupList.validate)]
+    inner_entities: Annotated[List[StorageEntity], Field(default_factory=list)]
+    users: Annotated[List[StorageEntityUser], Field(default_factory=list)]
 
 
 class StorageEntityList(BaseModel):
     entity_list: Annotated[List[StorageEntity], Field(default_factory=list)]
-
-
-class StorageEntityDescription(BaseModel):
-    entity_name: str
-    group_name: str = "observer"

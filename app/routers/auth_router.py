@@ -42,9 +42,6 @@ async def login_for_access_token(
         secure=False,
     )
 
-    # Realization with PasswordBearer
-    #
-    #return Token(access_token=access_token, token_type="bearer")
     return response
 
 
@@ -81,7 +78,6 @@ async def post_register(
             "email": email,
             "telegram": telegram,
             "disabled": False,
-            "available_storages": [],
         }
     )
 
