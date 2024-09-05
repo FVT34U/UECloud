@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from app.utils.exception_handler import http_exception_handler
 from app.routers.main_router import router as MainRouter
 from app.routers.auth_router import router as AuthRouter
+from app.routers.users_router import router as UsersRouter
 
 
 app = FastAPI()
@@ -10,6 +11,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 app.include_router(MainRouter)
 app.include_router(AuthRouter)
+app.include_router(UsersRouter)
 app.add_exception_handler(HTTPException, http_exception_handler)
 
 

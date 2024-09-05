@@ -98,3 +98,11 @@ class S3Client:
 
     def cleanup(self, file_path: str):
         os.remove(file_path)
+
+
+s3_client = S3Client(
+    "L201GGN3PARM2UOEH46F",
+    "Qk1rldX0xI3nPgncA8awr7DYAIjqA1jezkYf2rIo",
+    "http://91.222.131.165:8080",
+    "uecloud",
+)

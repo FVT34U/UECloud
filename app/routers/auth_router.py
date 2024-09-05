@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, Form, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
-from app.models.user import User, authenticate_user, get_current_active_user, get_db_user
+from app.models.user import User
+from app.validators.user_validators import authenticate_user, get_current_active_user, get_db_user
 from app.utils.mongodb_connection import get_collection_users
 from app.models.token import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
 from app.utils.password_encription import get_password_hash

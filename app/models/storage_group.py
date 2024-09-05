@@ -122,9 +122,3 @@ class StorageEntityGroupList(List[StorageEntityGroup]):
         return core_schema.with_info_before_validator_function(
             cls.validate, handler(List[StorageEntityGroup]), field_name=handler.field_name
         )
-    
-
-
-# if __name__ == "__main__":
-#     l = StorageEntityGroupList()
-#     print(l[0])
