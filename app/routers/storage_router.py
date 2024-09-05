@@ -14,14 +14,64 @@ from app.utils.s3_connection import s3_client
 
 router = APIRouter()
 
-@router.get("/workspaces/", response_model=StorageEntityList)
+
+"""
+New realization
+Just want to resolving path and checking permissions for any action
+Wish me some luck and patient
+"""
+
+
+async def resolve_path(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    path: str,
+) -> StorageEntityList:
+    if path == "":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Empty path",
+        )
+    
+    entities = path.split("/")
+    
+    try:
+        while True:
+            entities.remove("")
+    except ValueError:
+        pass
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Can't parse current path",
+        )
+    
+    return "/".join(entities)
+
+
+@router.get("/workspace/{path:path}", response_model=StorageEntityList)
+async def get_content_by_path(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    path: Annotated[str, Depends(resolve_path)],
+):
+    print(path)
+    return StorageEntityList(entity_list=[])
+
+
+"""
+Strange part
+I want to delete it, but need information from this code
+"""
+
+old_router = APIRouter()
+
+@old_router.get("/workspaces/", response_model=StorageEntityList)
 async def get_workspaces(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     return await get_available_storage_entities(current_user, "workspace")
 
 
-@router.post("/workspaces/create", response_model=StorageEntity)
+@old_router.post("/workspaces/create", response_model=StorageEntity)
 async def post_create_workspace(
     back: BackgroundTasks,
     current_user: Annotated[User, Depends(get_current_active_user)],
@@ -68,7 +118,7 @@ async def post_create_workspace(
     return se_in_db
 
 
-@router.get("/workspaces/{workspace_name}/", response_model=StorageEntity)
+@old_router.get("/workspaces/{workspace_name}/", response_model=StorageEntity)
 async def get_workspace_by_name(
     workspace_name: Annotated[str, fastapi.Path(...)],
     workspace: Annotated[StorageEntityInDB, Depends(lambda workspace_name: storage_entity_exists(se_name=workspace_name))],
@@ -81,7 +131,7 @@ async def get_workspace_by_name(
     return workspace
 
 
-@router.get("/workspaces/{workspace_name}/projects", response_model=StorageEntityList)
+@old_router.get("/workspaces/{workspace_name}/projects", response_model=StorageEntityList)
 async def get_projects_by_workspace(
     workspace_name: Annotated[str, fastapi.Path(...)],
     workspace: Annotated[StorageEntityInDB, Depends(lambda workspace_name: storage_entity_exists(se_name=workspace_name))],
@@ -94,7 +144,7 @@ async def get_projects_by_workspace(
     return await get_available_storage_entities(current_user, "workspace", workspace.id)
 
 
-@router.post("/workspaces/{workspace_name}/projects/create", response_model=StorageEntity)
+@old_router.post("/workspaces/{workspace_name}/projects/create", response_model=StorageEntity)
 async def post_create_project(
     back: BackgroundTasks,
     workspace_name: Annotated[str, fastapi.Path(...)],
@@ -147,7 +197,7 @@ async def post_create_project(
     return se_in_db
 
 
-@router.get("/workspaces/{workspace_name}/projects/{project_name}", response_model=StorageEntity)
+@old_router.get("/workspaces/{workspace_name}/projects/{project_name}", response_model=StorageEntity)
 async def get_projects_by_workspace(
     workspace_name: Annotated[str, fastapi.Path(...)],
     workspace: Annotated[StorageEntityInDB, Depends(lambda workspace_name: storage_entity_exists(se_name=workspace_name))],
