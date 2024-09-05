@@ -1,13 +1,14 @@
 from pathlib import Path
-from typing import Annotated, List
+from typing import Annotated
 import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, status
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+import fastapi
+from fastapi.responses import FileResponse, HTMLResponse
 
-from app.models.storage_entity import StorageEntity, StorageEntityInDB, StorageEntityList, StorageEntityUser, get_available_workspaces, workspace_exists, workspace_name_is_free
-from app.models.storage_group import StorageEntityGroup, StorageEntityGroupList
-from app.models.user import User, get_current_active_user, get_db_user, user_exists, user_has_access_to_project, user_has_access_to_workspace
-from app.utils.mongodb_connection import get_collection_users, get_collection_workspaces
+from app.models.storage_entity import *
+from app.models.storage_group import StorageEntityGroupList
+from app.models.user import User, get_current_active_user, user_exists, user_has_access_to_project, user_has_access_to_workspace
+from app.utils.mongodb_connection import get_collection_storage_entities
 from app.utils.s3_connection import S3Client
 from app.utils.extension_mapping import MEDIA_TYPES
 
@@ -80,7 +81,7 @@ async def get_user_by_name(
 async def get_workspaces(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    return await get_available_workspaces(current_user)
+    return await get_available_storage_entities(current_user, "workspace")
 
 
 @router.post("/workspaces/create", response_model=StorageEntity)
@@ -89,13 +90,13 @@ async def post_create_workspace(
     current_user: Annotated[User, Depends(get_current_active_user)],
     workspace_name: Annotated[str, Form(...)],
 ):
-    if not await workspace_name_is_free(workspace_name):
+    if not await storage_entity_name_is_free(workspace_name):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Workspace with this name is already exists",
         )
 
-    coll = get_collection_workspaces()
+    coll = get_collection_storage_entities()
 
     id = str(uuid.uuid4())
     group_list = StorageEntityGroupList()
@@ -104,18 +105,19 @@ async def post_create_workspace(
         group=group_list[1],
     )
 
-    workspace_in_db = StorageEntityInDB(
+    se_in_db = StorageEntityInDB(
         _id=id,
         name=workspace_name,
         type="workspace",
         owner=current_user.username,
+        parent="",
         groups=StorageEntityGroupList(),
         inner_entities=list(),
         users=[se_user],
     )
 
     result = coll.insert_one(
-        workspace_in_db.model_dump(by_alias=True)
+        se_in_db.model_dump(by_alias=True)
     )
 
     if not result.acknowledged:
@@ -124,14 +126,15 @@ async def post_create_workspace(
             detail="Something went wrong during database insert operation",
         )
     
-    back.add_task(s3_client.create_dir, workspace_in_db.name)
+    back.add_task(s3_client.create_dir, se_in_db.name)
 
-    return await workspace_exists(workspace_in_db.name)
+    return se_in_db
 
 
 @router.get("/workspaces/{workspace_name}/", response_model=StorageEntity)
 async def get_workspace_by_name(
-    workspace: Annotated[StorageEntity, Depends(workspace_exists)],
+    workspace_name: Annotated[str, fastapi.Path(...)],
+    workspace: Annotated[StorageEntityInDB, Depends(lambda workspace_name: storage_entity_exists(se_name=workspace_name))],
     current_user: Annotated[
         User,
         Depends(get_current_active_user),
@@ -143,38 +146,81 @@ async def get_workspace_by_name(
 
 @router.get("/workspaces/{workspace_name}/projects", response_model=StorageEntityList)
 async def get_projects_by_workspace(
-    workspace: Annotated[StorageEntityInDB, Depends(workspace_exists)],
+    workspace_name: Annotated[str, fastapi.Path(...)],
+    workspace: Annotated[StorageEntityInDB, Depends(lambda workspace_name: storage_entity_exists(se_name=workspace_name))],
     current_user: Annotated[
         User,
         Depends(get_current_active_user),
         Depends(user_has_access_to_workspace),
     ],
 ):
-    pass # TODO
+    return await get_available_storage_entities(current_user, "workspace", workspace.id)
 
 
-@router.post("/workspaces/{workspace_name}/projects/create", response_class=JSONResponse)
+@router.post("/workspaces/{workspace_name}/projects/create", response_model=StorageEntity)
 async def post_create_project(
-    workspace: Annotated[StorageEntity, Depends(workspace_exists)],
+    back: BackgroundTasks,
+    workspace_name: Annotated[str, fastapi.Path(...)],
+    workspace: Annotated[StorageEntityInDB, Depends(lambda workspace_name: storage_entity_exists(se_name=workspace_name))],
     current_user: Annotated[
         User,
         Depends(get_current_active_user),
         Depends(user_has_access_to_workspace),
     ],
-    project_name: Annotated[str, Form(...)]
+    project_name: Annotated[str, Form(...)],
 ):
-    pass # TODO
+    if not await storage_entity_name_is_free(project_name, workspace.id):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Project with this name is already exists",
+        )
+
+    coll = get_collection_storage_entities()
+
+    id = str(uuid.uuid4())
+    group_list = StorageEntityGroupList()
+    se_user = StorageEntityUser(
+        user=current_user,
+        group=group_list[1],
+    )
+
+    se_in_db = StorageEntityInDB(
+        _id=id,
+        name=project_name,
+        type="project",
+        owner=current_user.username,
+        parent=workspace.id,
+        groups=StorageEntityGroupList(),
+        inner_entities=list(),
+        users=[se_user],
+    )
+
+    result = coll.insert_one(
+        se_in_db.model_dump(by_alias=True)
+    )
+
+    if not result.acknowledged:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong during database insert operation",
+        )
+    
+    back.add_task(s3_client.create_dir, f"{workspace.name}/{project_name}")
+
+    return se_in_db
 
 
 @router.get("/workspaces/{workspace_name}/projects/{project_name}", response_model=StorageEntity)
 async def get_projects_by_workspace(
+    workspace_name: Annotated[str, fastapi.Path(...)],
+    workspace: Annotated[StorageEntityInDB, Depends(lambda workspace_name: storage_entity_exists(se_name=workspace_name))],
+    #project_name: Annotated[str, fastapi.Path(...)],
+    #project: Annotated[StorageEntityInDB, Depends(lambda project_name: storage_entity_exists(project_name, workspace.id))],
     current_user: Annotated[
         User,
         Depends(get_current_active_user),
         Depends(user_has_access_to_workspace),
         Depends(user_has_access_to_project),
     ],
-    workspace_name: str,
-    project_name: str,
 ):
     pass # TODO

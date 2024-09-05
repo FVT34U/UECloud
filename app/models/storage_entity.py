@@ -1,10 +1,10 @@
 from typing import Annotated, List
-from fastapi import Depends, HTTPException, status
+from fastapi import HTTPException, status
 from pydantic import BaseModel, BeforeValidator, Field
 
 from app.models.storage_group import StorageEntityGroup, StorageEntityGroupList
-from app.models.user import User, get_current_active_user, user_has_access_to_workspace
-from app.utils.mongodb_connection import get_collection_workspaces
+from app.models.user import User
+from app.utils.mongodb_connection import get_collection_storage_entities
 
 
 class StorageEntity(BaseModel):
@@ -12,6 +12,7 @@ class StorageEntity(BaseModel):
     name: str
     type: str
     owner: str
+    parent: str
 
 
 class StorageEntityUser(BaseModel):
@@ -21,7 +22,6 @@ class StorageEntityUser(BaseModel):
 
 class StorageEntityInDB(StorageEntity):
     groups: Annotated[List[StorageEntityGroup], BeforeValidator(StorageEntityGroupList.validate)]
-    inner_entities: Annotated[List[StorageEntity], Field(default_factory=list)]
     users: Annotated[List[StorageEntityUser], Field(default_factory=list)]
 
 
@@ -29,64 +29,63 @@ class StorageEntityList(BaseModel):
     entity_list: Annotated[List[StorageEntity], Field(default_factory=list)]
 
 
-async def get_available_workspaces(
+async def get_available_storage_entities(
     current_user: User,
+    type: str,
+    parent_id: str = "",
 ) -> StorageEntityList:
-    ws_coll = get_collection_workspaces()
-    wss = ws_coll.find(
+    coll = get_collection_storage_entities()
+
+    query = {
+        "type": type,
+        "parent": parent_id,
+        "users": {
+            "$elemMatch": {
+                "user.username": current_user.username,
+            }
+        }
+    }
+
+    ses = coll.find(query)
+    storage_entities = StorageEntityList(entity_list=[StorageEntityInDB(**se) for se in ses])
+
+    return storage_entities
+
+
+def storage_entity_exists(
+    se_name: str,
+    parent_id: str = "",
+) -> StorageEntityInDB:
+    coll = get_collection_storage_entities()
+    st = coll.find_one(
         {
-            "users": {
-                "$elemMatch": {
-                    "user": current_user.username,
-                },
-            },
+            "name": se_name,
+            "parent": parent_id,
         }
     )
 
-    workspaces = StorageEntityList(entity_list=[StorageEntityInDB(**ws) for ws in wss])
-
-    return workspaces
-
-
-async def get_available_projects( # TODO: короче капец полный, надо чота думать по базе
-    current_user: User,
-    workspace: StorageEntityInDB,
-) -> StorageEntityList:
-    coll = get_collection_workspaces()
-    projs = coll.find(
-        {
-            "name": workspace.name,
-        },
-        {
-            "_id": 0,
-            "inner_entities": 1,
-        },
-    )
-
-
-
-async def workspace_exists(
-    workspace_name: str,
-) -> StorageEntityInDB:
-    coll = get_collection_workspaces()
-    ws = coll.find_one({"name": workspace_name})
-
-    if not ws:
+    if not st:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Workspace doesn't exists"
+            detail="Storage Entity doesn't exists"
         )
     
-    return StorageEntityInDB(**ws)
+    return StorageEntityInDB(**st)
 
 
-async def workspace_name_is_free(
-    workspace_name: str,
+async def storage_entity_name_is_free(
+    se_name: str,
+    parent_id: str = "",
 ) -> bool:
-    coll = get_collection_workspaces()
-    ws = coll.find_one({"name": workspace_name})
+    coll = get_collection_storage_entities()
+    st = coll.find_one(
+        {
+            "name": se_name,
+            "parent": parent_id,
+        }
+    )
 
-    if ws:
+    if st:
         return False
     
     return True

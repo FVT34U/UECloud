@@ -4,7 +4,7 @@ import jwt
 from pydantic import BaseModel
 
 from app.models.token import TokenData, SECRET_KEY, ALGORITHM
-from app.utils.mongodb_connection import get_collection_users, get_collection_workspaces
+from app.utils.mongodb_connection import get_collection_users, get_collection_storage_entities
 from app.utils.password_encription import verify_password
 
 
@@ -108,7 +108,7 @@ async def user_has_access_to_workspace(
     workspace_name: str,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
-    ws_coll = get_collection_workspaces()
+    ws_coll = get_collection_storage_entities()
 
     from app.models.storage_entity import StorageEntityInDB
     ws_in_db = StorageEntityInDB(**ws_coll.find_one({"name": workspace_name}))
