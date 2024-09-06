@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Annotated
 import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, Form, HTTPException, status
@@ -26,11 +27,8 @@ async def resolve_path(
     current_user: Annotated[User, Depends(get_current_active_user)],
     path: str,
 ) -> StorageEntityList:
-    if path == "":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Empty path",
-        )
+    if path == "/":
+        return await get_available_storage_entities(current_user, "workspace", "")
     
     entities = path.split("/")
     
@@ -45,16 +43,66 @@ async def resolve_path(
             detail="Can't parse current path",
         )
     
-    return "/".join(entities)
+    coll = get_collection_storage_entities()
 
+    if len(entities) == 1:
+        ent = coll.find_one(
+            {
+                "type": "workspace",
+                "name": entities[0],
+                "parent": "",
+                "users": {
+                    "$elemMatch": {
+                        "user.username": current_user.username,
+                    }
+                }
+            }
+        )
+
+        if not ent:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="This entity doesn't exists or you doesn't have permission to see this entity",
+            )
+        
+        return await get_available_storage_entities(current_user, "project", ent.get("_id"))
+
+    current_name = entities[-1]
+
+    current_doc = coll.find_one({"name": current_name})
+    endpoint = deepcopy(current_doc)
+    
+    if not current_doc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Endpoint doesn't exists",
+        )
+
+    for parent_name in reversed(entities[:-1]):
+        parent_id = current_doc.get("parent")
+        if not parent_id:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="This entity doesn't exists",
+            )
+
+        current_doc = coll.find_one({"_id": parent_id})
+
+        if not current_doc or current_doc.get("name") != parent_name:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="This entity doesn't exists",
+            )
+
+    return await get_available_storage_entities(current_user, "folder", endpoint.get("_id"))
+    
 
 @router.get("/workspace/{path:path}", response_model=StorageEntityList)
 async def get_content_by_path(
     current_user: Annotated[User, Depends(get_current_active_user)],
-    path: Annotated[str, Depends(resolve_path)],
+    storage_entities: Annotated[StorageEntityList, Depends(resolve_path)],
 ):
-    print(path)
-    return StorageEntityList(entity_list=[])
+    return storage_entities
 
 
 """

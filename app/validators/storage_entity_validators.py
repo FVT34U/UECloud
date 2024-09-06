@@ -22,7 +22,16 @@ async def get_available_storage_entities(
         }
     }
 
+    test = coll.count_documents(query)
+
+    if test == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Can't find anything for some reason",
+        )
+    
     ses = coll.find(query)
+
     storage_entities = StorageEntityList(entity_list=[StorageEntityInDB(**se) for se in ses])
 
     return storage_entities
