@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 import os
 from aiobotocore.session import get_session
 import aiofiles
+from fastapi import UploadFile
 
 class S3Client:
 
@@ -34,16 +35,15 @@ class S3Client:
 
     async def upload_file(
             self,
+            file: bytes,
             file_path: str,
     ) -> None:
         async with self.get_client() as client:
-            with open(file_path, "rb") as file:
-                k = file_path.split("\\")[-1]
-                await client.put_object(
-                    Bucket=self.bucket_name,
-                    Key=f"test/{k}",
-                    Body=file,
-                )
+            await client.put_object(
+                Bucket=self.bucket_name,
+                Key=file_path,
+                Body=file,
+            )
 
     async def download_file(
             self,

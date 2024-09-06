@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Annotated
-from fastapi import APIRouter, BackgroundTasks, Depends, Form
+from fastapi import APIRouter, BackgroundTasks, Depends, Form, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 
 from app.models.user import User
@@ -21,9 +21,10 @@ async def get_index(current_user: Annotated[User, Depends(get_current_active_use
 @router.post("/upload")
 async def post_upload(
     current_user: Annotated[User, Depends(get_current_active_user)],
+    file: UploadFile,
     path: Annotated[str, Form(...)],
 ):
-    await s3_client.upload_file(path)
+    await s3_client.upload_file(file.file, f"{path}/{file.filename}")
 
 
 @router.post("/download")
