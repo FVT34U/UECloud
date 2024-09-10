@@ -11,6 +11,7 @@ class StorageEntity(BaseModel):
     type: str
     owner: str
     parent: str
+    path: str
 
 
 class StorageEntityUser(BaseModel):

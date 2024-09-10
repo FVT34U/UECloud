@@ -5,17 +5,19 @@ from app.models.user import User
 from app.validators.user_validators import get_current_active_user, user_exists
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/users"
+)
 
 
-@router.get("/users/me/", response_model=User)
+@router.get("/me/", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
     return current_user
 
 
-@router.get("/users/{username}/", response_model=User)
+@router.get("/{username}/", response_model=User)
 async def get_user_by_name(
     current_user: Annotated[User, Depends(get_current_active_user)],
     user: Annotated[User, Depends(user_exists)],
