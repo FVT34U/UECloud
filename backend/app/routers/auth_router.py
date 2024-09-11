@@ -26,7 +26,6 @@ async def login_for_access_token(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -41,6 +40,14 @@ async def login_for_access_token(
         value=access_token,
         httponly=True,
         secure=False,
+        samesite='lax',
+    )
+    response.set_cookie(
+        key="is_signin",
+        value="true",
+        httponly=False,
+        secure=False,
+        samesite='lax',
     )
 
     return response
@@ -91,5 +98,6 @@ async def get_logout(
 ):
     response = RedirectResponse("/login", status_code=302)
     response.delete_cookie(key="access_token")
+    response.set_cookie(key="is_signin", value=False)
 
     return response

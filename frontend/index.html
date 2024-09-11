@@ -1,45 +1,14 @@
 <!doctype html>
 <html lang="en">
-
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>UECloud</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-  <link rel="stylesheet" href="/static/styles.css">
-</head>
-
-<body>
-
-    <div id="header-container"></div>
-
-    <div class="container my-5">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb breadcrumb-chevron p-3 bg-body-tertiary rounded-3">
-            <li class="breadcrumb-item">
-              <a class="link-body-emphasis" href="/workspace//">
-                <svg class="bi" width="16" height="16"><use xlink:href="#house-door-fill"></use></svg>
-                <span class="visually-hidden">
-                    Home
-                </span>
-              </a>
-            </li>
-            <li class="breadcrumb-item">
-              <a class="link-body-emphasis fw-semibold text-decoration-none" href="#">Library</a>
-            </li>
-            <li class="breadcrumb-item active" aria-current="page">
-              Data
-            </li>
-          </ol>
-        </nav>
-    </div>
-
-    <div id="table-container" class="container d-flex justify-content-center mt-5"></div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script src="static/add_header.js"></script>
-    <script src="static/add_table.js"></script>
-
-</body>
-
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link type="stylesheet" href="./src/index.css">
+    <title>UECloud</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
