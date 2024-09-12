@@ -6,13 +6,28 @@ import {
     MenubarSeparator,
     MenubarShortcut,
     MenubarTrigger,
-  } from "@/components/ui/menubar"
+} from "@/components/ui/menubar"
+
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/components/ui/dialog"
+  
 import axios from "axios";
-import { useEffect } from "react";
+import { useEffect, useState, } from "react";
+import Cookies from "js-cookie";
+import { ProfileForm } from "./login_form";
+import { Button } from "./ui/button";
+
 
 function Header() {
     const getProfile = () => {
-        axios.get('http://127.0.0.1:8000/api/users/me', {
+        axios.get('https://127.0.0.1:8000/api/users/me', {
             withCredentials: true,
         })
         .then(resp => {
@@ -21,25 +36,68 @@ function Header() {
     };
 
     const checkSignIn = () => {
-        
+        console.log('cock', Cookies.get('signIn'));
+        return Cookies.get('signIn');
     };
 
+    const doLogout = () => {
+        axios.get('https://127.0.0.1:8000/api/logout', {
+            withCredentials: true,
+        })
+        .then(resp => {
+            console.log('api/logout', resp)
+            if (resp.status === 200) {
+                Cookies.set('signIn', 'false')
+                setMenuContent(signInMenuItem)
+            }
+        })
+    }
+
+    const signInMenuItem = 
+    <MenubarContent className="mx-10">
+        <DialogTrigger asChild>
+            <MenubarItem>Sign In</MenubarItem>
+        </DialogTrigger>
+    </MenubarContent>
+
+    const usualMenuItem =
+    <MenubarContent className="mx-10">
+        <MenubarItem onClick={getProfile}>Profile</MenubarItem>
+        <MenubarItem>Settings</MenubarItem>
+        <MenubarSeparator />
+        <MenubarItem onClick={doLogout}>Logout</MenubarItem>
+    </MenubarContent>
+    
+    const [menuContent, setMenuContent] = useState(signInMenuItem);
+
     useEffect(() => {
-        checkSignIn()
+        if (checkSignIn() === undefined) {
+            setMenuContent(signInMenuItem)
+        }
+        else if (checkSignIn() === "false") {
+            setMenuContent(signInMenuItem)
+        }
+        else {
+            setMenuContent(usualMenuItem)
+        }
     }, []);
 
     return (
         <Menubar className="px-10 py-5 justify-end">
             <MenubarMenu>
                 <MenubarTrigger>UECloud</MenubarTrigger>
-                    <MenubarContent className="mx-10">
-                        <MenubarItem onClick={getProfile}>Profile</MenubarItem>
-                        <MenubarItem>Settings</MenubarItem>
-                        <MenubarSeparator />
-                        <MenubarItem>
-                            <a href="/logout">Logout</a>
-                        </MenubarItem>
-                    </MenubarContent>
+                    <Dialog>
+                        {menuContent}
+                        <DialogContent aria-description="">
+                            <DialogHeader>
+                                <DialogTitle>Sign In</DialogTitle>
+                                <DialogDescription>
+                                    You can Sign In here. Enter your credentials and click Submit.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <ProfileForm setMenuContent={setMenuContent} usualMenuItem={usualMenuItem}/>
+                        </DialogContent>
+                    </Dialog>
             </MenubarMenu>
         </Menubar>
     )

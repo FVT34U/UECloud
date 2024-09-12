@@ -1,8 +1,9 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Annotated, Optional
 import uuid
-from fastapi import APIRouter, Depends, Form, HTTPException, status
+from zoneinfo import ZoneInfo
+from fastapi import APIRouter, Depends, Form, HTTPException, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -33,21 +34,15 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
 
-    response = RedirectResponse("/", status_code=302)
+    response = Response(status_code=200)
 
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,
-        samesite='lax',
-    )
-    response.set_cookie(
-        key="is_signin",
-        value="true",
-        httponly=False,
-        secure=False,
-        samesite='lax',
+        secure=True,
+        samesite='none',
+        max_age=604800,
     )
 
     return response
@@ -96,8 +91,7 @@ async def post_register(
 async def get_logout(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
-    response = RedirectResponse("/login", status_code=302)
+    response = Response(status_code=200)
     response.delete_cookie(key="access_token")
-    response.set_cookie(key="is_signin", value=False)
 
     return response

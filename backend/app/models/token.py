@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 SECRET_KEY = "9d20a9b4fd024e40fabe0765bfeb78fdfa33e71d991a82ff9b616ff40280af4a"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 300
+ACCESS_TOKEN_EXPIRE_MINUTES = 10080
 
 
 class Token(BaseModel):
