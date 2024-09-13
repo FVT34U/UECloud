@@ -7,13 +7,11 @@ from app.utils.mongodb_connection import get_collection_storage_entities
 
 async def get_available_storage_entities(
     current_user: User,
-    type: str,
     parent_id: str = "",
 ) -> StorageEntityList:
     coll = get_collection_storage_entities()
 
     query = {
-        "type": type,
         "parent": parent_id,
         "users": {
             "$elemMatch": {
@@ -21,6 +19,7 @@ async def get_available_storage_entities(
             }
         }
     }
+    #print(current_user.username, type, parent_id)
 
     test = coll.count_documents(query)
 

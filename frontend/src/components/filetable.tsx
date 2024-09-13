@@ -12,25 +12,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import axios from "axios"
 import { useEffect, useState } from "react"
 import { EntityList } from "./content"
+import { Button } from "./ui/button"
 
 
 interface ContentProps {
     entityList: EntityList
+    updateTable: (name: string) => void
 }
 
 
-function Filetable( { entityList }: ContentProps ){
-    // const [localEntityList, setEntityList] = useState<EntityList>([]);
-
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         const data = entityList;
-    //         setEntityList(data);
-    //         console.log('useEffect', entityList);
-    //     }
-
-    //     fetchData();
-    // }, []);
+function Filetable( { entityList, updateTable }: ContentProps ){
 
     return(
         <Table>
@@ -40,6 +31,9 @@ function Filetable( { entityList }: ContentProps ){
                     <TableHead>Name</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Type</TableHead>
+                    <TableHead>
+                        <Button>Add</Button>
+                    </TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -52,7 +46,11 @@ function Filetable( { entityList }: ContentProps ){
                                     <AvatarFallback>{ent.type}</AvatarFallback>
                                 </Avatar>
                             </TableCell>
-                            <TableCell>{ent.name}</TableCell>
+                            <TableCell>
+                                <Button onClick={() => {if(ent.type !== 'file') updateTable(ent.path)}}>
+                                    {ent.name}
+                                </Button>
+                            </TableCell>
                             <TableCell>11.09.2024</TableCell>
                             <TableCell>{ent.type}</TableCell>
                         </TableRow>

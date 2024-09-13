@@ -30,7 +30,9 @@ async def resolve_path(
     path: str,
 ) -> StorageEntityList:
     if path == "/":
-        return await get_available_storage_entities(current_user, "workspace", "")
+        return await get_available_storage_entities(current_user, "")
+    
+    print(f"path: {path}")
     
     entities = path.split("/")
     
@@ -67,7 +69,7 @@ async def resolve_path(
                 detail="This entity doesn't exists or you doesn't have permission to see this entity",
             )
         
-        return await get_available_storage_entities(current_user, "project", ent.get("_id"))
+        return await get_available_storage_entities(current_user, ent.get("_id"))
 
     current_name = entities[-1]
 
@@ -95,8 +97,10 @@ async def resolve_path(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="This entity doesn't exists",
             )
+        
+    #print(endpoint)
 
-    return await get_available_storage_entities(current_user, "folder", endpoint.get("_id"))
+    return await get_available_storage_entities(current_user, endpoint.get("_id"))
     
 
 @router.get("/{path:path}", response_model=StorageEntityList)

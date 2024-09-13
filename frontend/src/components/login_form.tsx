@@ -56,6 +56,8 @@ export function ProfileForm ( { setMenuContent, usualMenuItem }: MenuContentProp
 			setMenuContent(usualMenuItem);
 		}
     })
+
+	window.location.reload()
   }
 
   return (

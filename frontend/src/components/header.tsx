@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog"
   
 import axios from "axios";
-import { useEffect, useState, } from "react";
+import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { ProfileForm } from "./login_form";
 import { Button } from "./ui/button";
@@ -51,6 +51,8 @@ function Header() {
                 setMenuContent(signInMenuItem)
             }
         })
+
+        window.location.reload()
     }
 
     const signInMenuItem = 

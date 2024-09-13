@@ -2,6 +2,7 @@ import axios from "axios"
 import Filepath from "./filepath"
 import Filetable from "./filetable"
 import { useEffect, useState } from "react"
+import { error } from "console"
 
 
 interface Entity {
@@ -16,14 +17,18 @@ interface Entity {
 export type EntityList = Entity[];
 
 
-async function fetchFiles(): Promise<EntityList> {
+async function fetchFiles(path: string): Promise<EntityList> {
     let entities: EntityList = [];
+    let url = `https://127.0.0.1:8000/api/workspace/${path}`;
 
-    await axios.get('https://127.0.0.1:8000/api/workspace//', {
+    await axios.get(url, {
         withCredentials: true,
     })
     .then(resp => {
         entities = resp.data['entity_list'];
+    })
+    .catch(error => {
+        return [];
     })
 
     return entities;
@@ -32,23 +37,34 @@ async function fetchFiles(): Promise<EntityList> {
 
 function Content() {
     const [entityList, setEntityList] = useState<EntityList>([]);
-    const [path, setPath] = useState<string[]>([]);
+    const [path, setPath] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
-            const data = await fetchFiles();
-            const path = data[0].path.split('/').slice(0, -1)
+            const data = await fetchFiles('/');
             setEntityList(data);
-            setPath(path);
+            try {
+                setPath(data[0].path);
+            }
+            catch {} // TODO: сделать так, чтобы название папки отображалось в любом случае, даже если там пусто
         }
 
         fetchData();
     }, []);
 
+    const updateTable = async (name: string) => {
+        const data = await fetchFiles(name);
+        setEntityList(data);
+        try {
+            setPath(data[0].path);
+        }
+        catch {} // TODO: сделать так, чтобы название папки отображалось в любом случае, даже если там пусто
+    }
+
     return(
         <>
-        <Filepath path={path}></Filepath>
-        <Filetable entityList={entityList}></Filetable>
+        <Filepath path={path} updateTable={updateTable}></Filepath>
+        <Filetable entityList={entityList} updateTable={updateTable}></Filetable>
         </>
     )
 }
