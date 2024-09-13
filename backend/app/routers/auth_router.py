@@ -48,19 +48,7 @@ async def login_for_access_token(
     return response
 
 
-@router.get("/login", response_class=HTMLResponse)
-async def get_login():
-    index_path = Path("frontend/login.html")
-    return index_path.read_text(encoding="utf-8")
-
-
-@router.get("/register", response_class=HTMLResponse)
-async def get_register():
-    index_path = Path("frontend/register.html")
-    return index_path.read_text(encoding="utf-8")
-
-
-@router.post("/register", response_class=RedirectResponse)
+@router.post("/register", response_class=Response)
 async def post_register(
     username: Annotated[str, Form(...)],
     password: Annotated[str, Form(...)],
@@ -70,7 +58,7 @@ async def post_register(
     user = get_db_user(username)
     
     if user:
-        return RedirectResponse("/register", status_code=302)
+        return Response(status_code=400)
 
     coll = get_collection_users()
     coll.insert_one(
@@ -84,7 +72,7 @@ async def post_register(
         }
     )
 
-    return RedirectResponse("/login", status_code=302)
+    return Response(status_code=200)
 
 
 @router.get("/logout")
@@ -92,6 +80,6 @@ async def get_logout(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     response = Response(status_code=200)
-    response.delete_cookie(key="access_token")
+    response.delete_cookie(key="access_token", secure=True, httponly=True, samesite='none')
 
     return response

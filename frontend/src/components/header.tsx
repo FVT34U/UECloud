@@ -26,8 +26,8 @@ import { Button } from "./ui/button";
 
 
 function Header() {
-    const getProfile = () => {
-        axios.get('https://127.0.0.1:8000/api/users/me', {
+    const getProfile = async () => {
+        await axios.get('https://127.0.0.1:8000/api/users/me', {
             withCredentials: true,
         })
         .then(resp => {
@@ -40,8 +40,8 @@ function Header() {
         return Cookies.get('signIn');
     };
 
-    const doLogout = () => {
-        axios.get('https://127.0.0.1:8000/api/logout', {
+    const doLogout = async () => {
+        await axios.get('https://127.0.0.1:8000/api/logout', {
             withCredentials: true,
         })
         .then(resp => {

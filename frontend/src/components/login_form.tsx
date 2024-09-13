@@ -43,8 +43,8 @@ export function ProfileForm ( { setMenuContent, usualMenuItem }: MenuContentProp
     },
   })
  
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    axios.postForm(
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    await axios.postForm(
         "https://127.0.0.1:8000/api/token",
         values,
         { withCredentials: true, }
