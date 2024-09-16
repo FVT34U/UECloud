@@ -2,7 +2,8 @@ import axios from "axios"
 import Filepath from "./filepath"
 import Filetable from "./filetable"
 import { useEffect, useState } from "react"
-import { error } from "console"
+import { blob } from "stream/consumers"
+import TableContextMenu from "./context_menu"
 
 
 interface Entity {
@@ -34,6 +35,41 @@ async function fetchFiles(path: string): Promise<EntityList> {
     return entities;
 };
 
+async function downloadFile(path: string) {
+    const filename = path.split('/').slice(-1)[0]
+
+    await axios.postForm(
+        'https://127.0.0.1:8000/api/download',
+        { path: path },
+        { withCredentials: true, responseType: 'blob' },
+    )
+    .then(resp => {
+        const url = window.URL.createObjectURL(new Blob([resp.data]));
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename); // Имя файла, которое будет сохранено
+        document.body.appendChild(link);
+        link.click();
+
+        // Очищаем ссылку после скачивания
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    })
+}
+
+
+async function uploadFile(file: File | undefined, path: string | undefined) {
+    await axios.postForm(
+        'https://127.0.0.1:8000/api/upload',
+        { file: file, path: path, },
+        { withCredentials: true, },
+    )
+    .then(resp => {
+        console.log(resp)
+    })
+}
+
 
 function Content() {
     const [entityList, setEntityList] = useState<EntityList>([]);
@@ -46,7 +82,7 @@ function Content() {
             try {
                 setPath(data[0].path);
             }
-            catch {} // TODO: сделать так, чтобы название папки отображалось в любом случае, даже если там пусто
+            catch {}
         }
 
         fetchData();
@@ -58,13 +94,30 @@ function Content() {
         try {
             setPath(data[0].path);
         }
-        catch {} // TODO: сделать так, чтобы название папки отображалось в любом случае, даже если там пусто
+        catch {
+            let nameArray = name.split('/')
+            nameArray.push('temp')
+            const newName = nameArray.join('/')
+            setPath(newName)
+        } // TODO: жуткий костыль, но мне пофиг
+    }
+
+    const filepathProps = {
+        path: path,
+        updateTable: updateTable,
+    }
+    const filetableProps = {
+        entityList: entityList,
+        path: path,
+        updateTable: updateTable,
+        downloadFile: downloadFile,
+        uploadFile: uploadFile,
     }
 
     return(
         <>
-        <Filepath path={path} updateTable={updateTable}></Filepath>
-        <Filetable entityList={entityList} updateTable={updateTable}></Filetable>
+        <Filepath {...filepathProps}></Filepath>
+        <Filetable {...filetableProps}></Filetable>
         </>
     )
 }

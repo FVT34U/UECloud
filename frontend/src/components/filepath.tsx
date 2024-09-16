@@ -52,10 +52,12 @@ function Filepath({path, updateTable}: ContentProps) {
                 </BreadcrumbItem>
                 {
                     pathElements.map((p, index) => (
-                        <BreadcrumbItem key={index}>
-                            <BreadcrumbSeparator />
-                            <BreadcrumbLink onClick={() => updateTable(pathLinks[index])}>{p}</BreadcrumbLink>
-                        </BreadcrumbItem>
+                        <div className="flex items-center space-x-2" key={index}>
+                            <BreadcrumbSeparator className="mt-1" />
+                            <BreadcrumbItem>
+                                <BreadcrumbLink onClick={() => updateTable(pathLinks[index])}>{p}</BreadcrumbLink>
+                            </BreadcrumbItem>
+                        </div>
                     ))
                 }
             </BreadcrumbList>
