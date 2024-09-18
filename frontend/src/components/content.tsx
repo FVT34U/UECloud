@@ -15,11 +15,20 @@ interface Entity {
     path: string
 }
 
+interface EntityResponse {
+    parent_type: string
+    parent_path: string
+    entity_list: Entity[]
+}
+
 export type EntityList = Entity[];
 
 
-async function fetchFiles(path: string): Promise<EntityList> {
-    let entities: EntityList = [];
+async function fetchFiles(path: string): Promise<EntityResponse> {
+    let entities: Entity[] = [];
+    let resp_type = '';
+    let resp_path = '';
+
     let url = `https://127.0.0.1:8000/api/workspace/${path}`;
 
     await axios.get(url, {
@@ -27,20 +36,26 @@ async function fetchFiles(path: string): Promise<EntityList> {
     })
     .then(resp => {
         entities = resp.data['entity_list'];
+        resp_type = resp.data['parent_type'];
+        resp_path = resp.data['parent_path'];
     })
     .catch(error => {
-        return [];
+        return {};
     })
 
-    return entities;
+    return {
+        parent_type: resp_type,
+        parent_path: resp_path,
+        entity_list: entities,
+    };
 };
 
-async function downloadFile(path: string) {
+async function downloadFile(path: string, type: string) {
     const filename = path.split('/').slice(-1)[0]
 
     await axios.postForm(
         'https://127.0.0.1:8000/api/download',
-        { path: path },
+        { path: path, type: type },
         { withCredentials: true, responseType: 'blob' },
     )
     .then(resp => {
@@ -78,9 +93,9 @@ function Content() {
     useEffect(() => {
         const fetchData = async () => {
             const data = await fetchFiles('/');
-            setEntityList(data);
+            setEntityList(data.entity_list);
             try {
-                setPath(data[0].path);
+                setPath(data.parent_path);
             }
             catch {}
         }
@@ -90,9 +105,9 @@ function Content() {
 
     const updateTable = async (name: string) => {
         const data = await fetchFiles(name);
-        setEntityList(data);
+        setEntityList(data.entity_list);
         try {
-            setPath(data[0].path);
+            setPath(data.parent_path);
         }
         catch {
             let nameArray = name.split('/')

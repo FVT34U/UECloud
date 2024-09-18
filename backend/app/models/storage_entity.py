@@ -25,4 +25,6 @@ class StorageEntityInDB(StorageEntity):
 
 
 class StorageEntityList(BaseModel):
+    parent_type: str = ''
+    parent_path: str = ''
     entity_list: Annotated[List[StorageEntity], Field(default_factory=list)]

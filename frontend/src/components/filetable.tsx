@@ -19,16 +19,16 @@ interface ContentProps {
     entityList: EntityList
     path: string
     updateTable: (name: string) => void
-    downloadFile: (path: string) => void
+    downloadFile: (path: string, type: string) => void
     uploadFile: (file: File | undefined, path: string | undefined) => void
 }
 
 
-function getActions(type: string, downloadFile: (path: string) => void, path: string) {
+function getActions(type: string, downloadFile: (path: string, type: string) => void, path: string) {
     if (type === 'file') {
         return (
             <>
-                <Button onClick={ () => {downloadFile(path)} }>Download</Button>
+                <Button onClick={ () => {downloadFile(path, type)} }>Download</Button>
             </>
         )
     }
@@ -56,7 +56,7 @@ function Filetable( { entityList, path, updateTable, downloadFile, uploadFile }:
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        uploadFile(file, `${path.split('/').slice(0, -1).join('/')}/${file?.name}`) // TODO: лишний кусок пути
+        uploadFile(file, `${path.split('/').slice(0, -1).join('/')}/${file?.name}`)
     };
 
     return(

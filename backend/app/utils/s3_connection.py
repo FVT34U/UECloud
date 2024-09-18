@@ -1,8 +1,11 @@
 from contextlib import asynccontextmanager
 import os
+import uuid
 from aiobotocore.session import get_session
 import aiofiles
 from fastapi import UploadFile
+
+from app.utils.make_zip import zip_directory
 
 class S3Client:
 
@@ -48,29 +51,55 @@ class S3Client:
     async def download_file(
             self,
             file_path: str,
+            file_type: str,
     ) -> str | None:
-        folder_path = "storage"
-        file_name = file_path.split("/")[-1]
+        temp_folder_name = str(uuid.uuid4())
+        temp_storage_path = f"storage/{temp_folder_name}"
+        local_file_path = ''
+        orig_file_name = file_path.split("/")[-1]
 
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-
-        local_file_path = os.path.join(folder_path, file_name)
+        print('filepath', file_path)
 
         try:
             async with self.get_client() as client:
-                response = await client.get_object(
-                    Bucket=self.bucket_name,
-                    Key=file_path,
-                )
+                paginator = client.get_paginator('list_objects_v2')
+                async for result in paginator.paginate(Bucket=self.bucket_name, Prefix=file_path):
+                    if 'Contents' in result:
+                        for obj in result['Contents']:
+                            key = obj['Key']
 
-                async with response['Body'] as stream:
-                    async with aiofiles.open(local_file_path, 'wb') as file:
-                        await file.write(await stream.read())
-        except:
+                            response = await client.get_object(
+                                Bucket=self.bucket_name,
+                                Key=key,
+                            )
+
+                            print(key) # по ключу короче сохранять данные, там файлы в основном
+
+                            local_folder = ''
+                            local_file = ''
+
+                            if file_type != 'file':
+                                local_folder = f"{temp_storage_path}/{"/".join(file_path.split('/')[0:-1])}"
+                                local_file = f"{temp_storage_path}/{file_path}"
+                            else:
+                                local_folder = temp_storage_path
+                                local_file = f"{temp_storage_path}/{orig_file_name}"
+                            
+                            os.makedirs(local_folder, exist_ok=True)
+
+                            async with response['Body'] as stream:
+                                async with aiofiles.open(local_file, 'wb') as file:
+                                    await file.write(await stream.read())
+                
+                if file_type != 'file':
+                    zip_directory(temp_storage_path)
+                    return f"{temp_storage_path}/{temp_folder_name}.zip", temp_folder_name
+                else:
+                    return f"{temp_storage_path}/{orig_file_name}", temp_folder_name
+    
+        except Exception as ex:
+            print(ex)
             return None
-        
-        return local_file_path
             
     
     async def delete_file(

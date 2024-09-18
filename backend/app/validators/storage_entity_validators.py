@@ -21,14 +21,32 @@ async def get_available_storage_entities(
     }
     #print(current_user.username, type, parent_id)
 
+    ptype = ''
+    path = ''
+
+    if parent_id != '':
+        parent = coll.find_one(
+            {"_id": parent_id}
+        )
+        ptype = parent.get('type')
+        path = parent.get('path')
+
     test = coll.count_documents(query)
 
     if test == 0:
-        return StorageEntityList()
+        return StorageEntityList(
+            parent_type=ptype,
+            parent_path=path,
+            entity_list=[],
+        )
     
     ses = coll.find(query)
 
-    storage_entities = StorageEntityList(entity_list=[StorageEntityInDB(**se) for se in ses])
+    storage_entities = StorageEntityList(
+        parent_type=ptype,
+        parent_path=path,
+        entity_list=[StorageEntityInDB(**se) for se in ses],
+    )
 
     return storage_entities
 

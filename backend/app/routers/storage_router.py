@@ -139,7 +139,7 @@ async def post_create_entity(
 
     correct_path = "/".join(splitted_path)
 
-    parent = {"_id":""}
+    parent = {"_id":"", "type":"", "path":""}
     if entity_type != "workspace":
         parent = coll.find_one({"name": parent_name})
 

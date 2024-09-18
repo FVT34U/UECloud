@@ -6,7 +6,6 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
   } from "@/components/ui/breadcrumb"
-import { randomUUID } from "crypto"
   
 
 interface ContentProps {
@@ -14,24 +13,9 @@ interface ContentProps {
     updateTable: (name: string) => void
 }
 
-const temp =
-<>
-    <BreadcrumbItem>
-        <BreadcrumbLink href="/">Workspaces</BreadcrumbLink>
-    </BreadcrumbItem>
-    <BreadcrumbSeparator />
-    <BreadcrumbItem>
-        <BreadcrumbLink href="/adminsk">Projects</BreadcrumbLink>
-    </BreadcrumbItem>
-    <BreadcrumbSeparator />
-    <BreadcrumbItem>
-        <BreadcrumbPage>adminsk</BreadcrumbPage>
-    </BreadcrumbItem>
-</>
-
 
 function Filepath({path, updateTable}: ContentProps) {
-    const pathElements = path.split('/').slice(0, -1)
+    const pathElements = path.split('/')
 
     const makePathLinks = (): string[] => {
         return pathElements.reduce((acc, path, index) => {
