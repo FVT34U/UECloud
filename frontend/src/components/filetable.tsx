@@ -8,6 +8,15 @@ import {
     TableRow,
   } from "@/components/ui/table"
 
+  import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+  } from "@/components/ui/dropdown-menu"
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import axios from "axios"
 import { useEffect, useRef, useState } from "react"
@@ -18,46 +27,88 @@ import { Button } from "./ui/button"
 interface ContentProps {
     entityList: EntityList
     path: string
+    type: string
+    id: string
     updateTable: (name: string) => void
     downloadFile: (path: string, type: string) => void
-    uploadFile: (file: File | undefined, path: string | undefined) => void
+    uploadFile: (file: File | undefined, path: string | undefined, id: string) => void
 }
 
 
 function getActions(type: string, downloadFile: (path: string, type: string) => void, path: string) {
-    if (type === 'file') {
-        return (
-            <>
-                <Button onClick={ () => {downloadFile(path, type)} }>Download</Button>
-            </>
-        )
-    }
-    return (<></>)
+    return (
+        <>
+            <Button onClick={ () => {downloadFile(path, type)} }>Download</Button>
+        </>
+    )
 }
 
 
-function Filetable( { entityList, path, updateTable, downloadFile, uploadFile }: ContentProps ){
-
-    const nameForButton = () => {
-        if (entityList.length === 0) {
-            return 'Add'
-        }
-        else if (entityList[0].type !== 'workspace' && entityList[0].type !== 'project') {
-            return 'Add new folder/file'
-        }
-        return `Add new ${entityList[0].type}`
-    }
-
+function Filetable( { entityList, path, type, id, updateTable, downloadFile, uploadFile }: ContentProps ){
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleButtonClick = () => {
-        fileInputRef.current?.click();
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        } else {
+            console.log('fileInputRef.current is null');
+        }
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        console.log('id', id)
         const file = event.target.files?.[0];
-        uploadFile(file, `${path.split('/').slice(0, -1).join('/')}/${file?.name}`)
+
+        uploadFile(file, `${path}/${file?.name}`, id);
+        updateTable(path);
     };
+
+    const createEntity = () => {
+
+    };
+
+    const getDropDown = () => {
+        if (type === 'folder' || type === 'project') {
+            return (
+                <>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger>
+                            <Button>
+                                Add
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuItem>Folder</DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleButtonClick}>
+                                File
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        onChange={handleFileChange}
+                    />
+                </>
+            )
+        }
+        else if (type === 'workspace') {
+            return (
+                <Button onClick={createEntity}>
+                    Create Project
+                </Button>
+            )
+
+        }
+        else if (type === '') {
+            return (
+                <Button onClick={createEntity}>
+                    Create Workspace
+                </Button>
+            )
+        }
+    }
 
     return(
         <Table>
@@ -99,15 +150,7 @@ function Filetable( { entityList, path, updateTable, downloadFile, uploadFile }:
                         </Avatar>
                     </TableCell>
                     <TableCell>
-                        <Button onClick={handleButtonClick}>
-                            {nameForButton()}
-                        </Button>
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            style={{ display: 'none' }}
-                            onChange={handleFileChange}
-                        />
+                        {getDropDown()}
                     </TableCell>
                 </TableRow>
             </TableBody>

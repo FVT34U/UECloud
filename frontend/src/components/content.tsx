@@ -18,6 +18,7 @@ interface Entity {
 interface EntityResponse {
     parent_type: string
     parent_path: string
+    parent_id: string
     entity_list: Entity[]
 }
 
@@ -28,6 +29,7 @@ async function fetchFiles(path: string): Promise<EntityResponse> {
     let entities: Entity[] = [];
     let resp_type = '';
     let resp_path = '';
+    let id = '';
 
     let url = `https://127.0.0.1:8000/api/workspace/${path}`;
 
@@ -38,6 +40,7 @@ async function fetchFiles(path: string): Promise<EntityResponse> {
         entities = resp.data['entity_list'];
         resp_type = resp.data['parent_type'];
         resp_path = resp.data['parent_path'];
+        id = resp.data['parent_id'];
     })
     .catch(error => {
         return {};
@@ -46,12 +49,15 @@ async function fetchFiles(path: string): Promise<EntityResponse> {
     return {
         parent_type: resp_type,
         parent_path: resp_path,
+        parent_id: id,
         entity_list: entities,
     };
 };
 
 async function downloadFile(path: string, type: string) {
-    const filename = path.split('/').slice(-1)[0]
+    let filename = path.split('/').slice(-1)[0]
+
+    if (type !== 'file') {filename = filename.concat('.zip')}
 
     await axios.postForm(
         'https://127.0.0.1:8000/api/download',
@@ -74,10 +80,10 @@ async function downloadFile(path: string, type: string) {
 }
 
 
-async function uploadFile(file: File | undefined, path: string | undefined) {
+async function uploadFile(file: File | undefined, path: string | undefined, id: string) {
     await axios.postForm(
         'https://127.0.0.1:8000/api/upload',
-        { file: file, path: path, },
+        { file: file, path: path, parent_id: id },
         { withCredentials: true, },
     )
     .then(resp => {
@@ -89,6 +95,8 @@ async function uploadFile(file: File | undefined, path: string | undefined) {
 function Content() {
     const [entityList, setEntityList] = useState<EntityList>([]);
     const [path, setPath] = useState('');
+    const [type, setType] = useState('');
+    const [id, setID] = useState('');
 
     useEffect(() => {
         const fetchData = async () => {
@@ -96,6 +104,8 @@ function Content() {
             setEntityList(data.entity_list);
             try {
                 setPath(data.parent_path);
+                setType(data.parent_type);
+                setID(data.parent_id);
             }
             catch {}
         }
@@ -108,6 +118,8 @@ function Content() {
         setEntityList(data.entity_list);
         try {
             setPath(data.parent_path);
+            setType(data.parent_type);
+            setID(data.parent_id);
         }
         catch {
             let nameArray = name.split('/')
@@ -124,6 +136,8 @@ function Content() {
     const filetableProps = {
         entityList: entityList,
         path: path,
+        type: type,
+        id: id,
         updateTable: updateTable,
         downloadFile: downloadFile,
         uploadFile: uploadFile,

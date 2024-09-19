@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 import os
+import time
 import uuid
 from aiobotocore.session import get_session
 import aiofiles
@@ -42,11 +43,13 @@ class S3Client:
             file_path: str,
     ) -> None:
         async with self.get_client() as client:
-            await client.put_object(
+            response = await client.put_object(
                 Bucket=self.bucket_name,
                 Key=file_path,
                 Body=file,
             )
+
+        return response
 
     async def download_file(
             self,
@@ -75,28 +78,38 @@ class S3Client:
 
                             print(key) # по ключу короче сохранять данные, там файлы в основном
 
+                            if key.endswith("/"):
+                                continue
+
                             local_folder = ''
                             local_file = ''
+                            key_path = "/".join(key.split("/")[0:-1])
+                            key_file = key.split("/")[-1]
+                            _, key_extension = os.path.splitext(key_file)
+                            print(key_extension)
 
                             if file_type != 'file':
-                                local_folder = f"{temp_storage_path}/{"/".join(file_path.split('/')[0:-1])}"
-                                local_file = f"{temp_storage_path}/{file_path}"
+                                local_folder = f"{temp_storage_path}/{key_path}"
+                                local_file = f"{temp_storage_path}/{key}"
                             else:
                                 local_folder = temp_storage_path
                                 local_file = f"{temp_storage_path}/{orig_file_name}"
                             
                             os.makedirs(local_folder, exist_ok=True)
 
+                            if key_extension == '.stashkeep':
+                                continue
+
                             async with response['Body'] as stream:
                                 async with aiofiles.open(local_file, 'wb') as file:
                                     await file.write(await stream.read())
                 
                 if file_type != 'file':
-                    zip_directory(temp_storage_path)
-                    return f"{temp_storage_path}/{temp_folder_name}.zip", temp_folder_name
+                    name = file_path.split("/")[-1]
+                    zip_directory(temp_storage_path, name)
+                    return (f"{temp_storage_path}/{name}.zip", temp_folder_name)
                 else:
-                    return f"{temp_storage_path}/{orig_file_name}", temp_folder_name
-    
+                    return (f"{temp_storage_path}/{orig_file_name}", temp_folder_name)
         except Exception as ex:
             print(ex)
             return None
@@ -118,14 +131,16 @@ class S3Client:
         path: str,
     ) -> None:
         async with self.get_client() as client:
-            await client.put_object(
+            response = await client.put_object(
                 Bucket=self.bucket_name,
                 Key=f"{path}/stashkeep.stashkeep",
                 Body=b'',
             )
 
+        return response
 
-    def cleanup(self, file_path: str):
+
+    async def cleanup(self, file_path: str):
         os.remove(file_path)
 
 

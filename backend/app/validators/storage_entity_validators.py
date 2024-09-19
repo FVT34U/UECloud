@@ -37,6 +37,7 @@ async def get_available_storage_entities(
         return StorageEntityList(
             parent_type=ptype,
             parent_path=path,
+            parent_id=parent_id,
             entity_list=[],
         )
     
@@ -45,6 +46,7 @@ async def get_available_storage_entities(
     storage_entities = StorageEntityList(
         parent_type=ptype,
         parent_path=path,
+        parent_id=parent_id,
         entity_list=[StorageEntityInDB(**se) for se in ses],
     )
 
